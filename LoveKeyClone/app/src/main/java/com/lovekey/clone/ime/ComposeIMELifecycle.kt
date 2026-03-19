@@ -40,7 +40,7 @@ class ComposeIMELifecycle : LifecycleOwner, ViewModelStoreOwner, SavedStateRegis
     }
 
     fun onPause() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     }
 
     fun onStop() {

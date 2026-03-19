@@ -39,8 +39,10 @@ fun RealKeyboardUI(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (state.composingText.isNotEmpty()) 330.dp else 290.dp)
+            .wrapContentHeight()
             .background(Color(0xFFE2E6EF))
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(bottom = 4.dp)
     ) {
         // --- Candidates Strip (only show when composing pinyin) ---
         if (state.composingText.isNotEmpty()) {

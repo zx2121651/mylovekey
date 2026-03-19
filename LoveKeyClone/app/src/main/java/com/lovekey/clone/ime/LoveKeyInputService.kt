@@ -9,11 +9,15 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.lovekey.clone.ui.theme.LoveKeyCloneTheme
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 class LoveKeyInputService : InputMethodService() {
 
     private lateinit var composeView: ComposeView
     private val composeLifecycle = ComposeIMELifecycle()
+    private var keyboardState by mutableStateOf(KeyboardState())
 
     override fun onCreate() {
         super.onCreate()
@@ -30,10 +34,15 @@ class LoveKeyInputService : InputMethodService() {
             setContent {
                 LoveKeyCloneTheme {
                     RealKeyboardUI(
+                        state = keyboardState,
                         onKeyPress = { handleKeyPress(it) },
                         onDelete = { handleDelete() },
                         onEnter = { handleEnter() },
-                        onAiAction = { triggerAiReply(it) }
+                        onAiAction = { triggerAiReply(it) },
+                        onSwitchMode = { newMode -> keyboardState = keyboardState.copy(mode = newMode) },
+                        onToggleShift = { keyboardState = keyboardState.copy(isShifted = !keyboardState.isShifted) },
+                        onToggleTraditional = { keyboardState = keyboardState.copy(isTraditional = !keyboardState.isTraditional) },
+                        onCandidateSelect = { handleCandidateSelect(it) }
                     )
                 }
             }
@@ -45,6 +54,8 @@ class LoveKeyInputService : InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         composeLifecycle.onResume()
+        // Reset composing state
+        keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
@@ -59,10 +70,28 @@ class LoveKeyInputService : InputMethodService() {
     }
 
     private fun handleKeyPress(text: String) {
-        currentInputConnection?.commitText(text, 1)
+        if (keyboardState.mode == KeyboardMode.QWERTY_PINYIN || keyboardState.mode == KeyboardMode.T9_PINYIN) {
+            // Letters go into composing text if in Pinyin mode
+            if (text.matches(Regex("[a-zA-Z]+"))) {
+                val newComposing = keyboardState.composingText + text
+                val cands = ChineseUtils.getCandidates(newComposing)
+                keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
+                return
+            }
+        }
+
+        // Non-letter or not in Pinyin mode: commit directly
+        commitDirectly(text)
     }
 
     private fun handleDelete() {
+        if (keyboardState.composingText.isNotEmpty()) {
+            val newComposing = keyboardState.composingText.dropLast(1)
+            val cands = if (newComposing.isNotEmpty()) ChineseUtils.getCandidates(newComposing) else emptyList()
+            keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
+            return
+        }
+
         val ic = currentInputConnection ?: return
         val selectedText = ic.getSelectedText(0)
         if (selectedText.isNullOrEmpty()) {
@@ -72,7 +101,29 @@ class LoveKeyInputService : InputMethodService() {
         }
     }
 
+    private fun handleCandidateSelect(word: String) {
+        val output = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(word) else word
+        commitDirectly(output)
+        // Reset composing state after selection
+        keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
+    }
+
+    private fun commitDirectly(text: String) {
+        currentInputConnection?.commitText(text, 1)
+        // If we typed punctuation while composing, we commit the raw letters first then the punctuation.
+        if (keyboardState.composingText.isNotEmpty()) {
+            currentInputConnection?.commitText(keyboardState.composingText + text, 1)
+            keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
+        }
+    }
+
     private fun handleEnter() {
+        if (keyboardState.composingText.isNotEmpty()) {
+            // Commit raw English text if user hits enter while composing
+            commitDirectly("")
+            return
+        }
+
         val ic = currentInputConnection ?: return
         val info = currentInputEditorInfo
         val actionId = info?.imeOptions?.and(EditorInfo.IME_MASK_ACTION) ?: EditorInfo.IME_ACTION_DONE
@@ -85,11 +136,7 @@ class LoveKeyInputService : InputMethodService() {
 
     private fun triggerAiReply(tag: String) {
         val ic = currentInputConnection ?: return
-
-        // 读取光标前面的上下文
         val contextText = ic.getTextBeforeCursor(200, 0)?.toString() ?: ""
-
-        // 根据不同标签 Mock 出对应的 AI 回复
         val mockReplies = mapOf(
             "高情商" to "在呼吸，在心跳，在想你呀~",
             "心动狙击" to "在想怎么回复才能让你心动💓",
@@ -98,10 +145,8 @@ class LoveKeyInputService : InputMethodService() {
             "暧昧拉扯" to "你猜猜看？猜对有奖哦~",
             "情场高手" to "本来在发呆，看到你的消息心跳就漏了一拍"
         )
-
-        val reply = mockReplies[tag] ?: "[$tag] 回复: ${if(contextText.isNotEmpty()) contextText else "你好"}"
-
-        // 将 AI 回复输入到当前应用
-        ic.commitText(reply, 1)
+        val reply = mockReplies[tag] ?: "[$tag] 回复: \${if(contextText.isNotEmpty()) contextText else \"你好\"}"
+        val finalReply = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(reply) else reply
+        ic.commitText(finalReply, 1)
     }
 }

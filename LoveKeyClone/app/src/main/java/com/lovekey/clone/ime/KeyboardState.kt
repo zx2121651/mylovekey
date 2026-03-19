@@ -11,7 +11,8 @@ enum class KeyboardMode {
 enum class ActivePanel {
     KEYBOARD,
     CHAO_HUI_SHUO,
-    BANG_NI_HUI
+    BANG_NI_HUI,
+    THEME_SELECTION
 }
 
 data class AiReplyCategory(
@@ -32,5 +33,7 @@ data class KeyboardState(
     val showPaywall: Boolean = false,
     val aiLoading: Boolean = false,
     val contextText: String = "",
-    val aiMockResults: List<AiReplyCategory> = emptyList()
+    val aiMockResults: List<AiReplyCategory> = emptyList(),
+    // Themes
+    val currentTheme: KeyboardTheme = ThemePresets.DefaultBlue
 )

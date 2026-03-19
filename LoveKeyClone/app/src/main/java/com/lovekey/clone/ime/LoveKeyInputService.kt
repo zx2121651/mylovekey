@@ -229,6 +229,11 @@ class LoveKeyInputService : InputMethodService() {
                     )
                 }, 600)
             }
+            "Themes" -> {
+                keyboardState = keyboardState.copy(
+                    activePanel = ActivePanel.THEME_SELECTION
+                )
+            }
             "CloseAi" -> {
                 keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
             }
@@ -243,9 +248,18 @@ class LoveKeyInputService : InputMethodService() {
                 )
             }
             else -> {
-                val finalReply = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(action) else action
-                commitDirectly(finalReply)
-                keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
+                if (action.startsWith("SelectTheme:")) {
+                    val themeId = action.substringAfter("SelectTheme:")
+                    val selectedTheme = ThemePresets.allThemes.find { it.id == themeId } ?: ThemePresets.DefaultBlue
+                    keyboardState = keyboardState.copy(
+                        currentTheme = selectedTheme,
+                        activePanel = ActivePanel.KEYBOARD
+                    )
+                } else {
+                    val finalReply = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(action) else action
+                    commitDirectly(finalReply)
+                    keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
+                }
             }
         }
     }

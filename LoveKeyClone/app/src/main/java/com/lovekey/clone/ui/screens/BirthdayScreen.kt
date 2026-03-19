@@ -15,8 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lovekey.clone.data.MockData.getZodiac
 import com.lovekey.clone.ui.components.WheelPicker
+import com.lovekey.clone.data.MockData.getZodiac
 import java.util.Calendar
 
 @Composable
@@ -25,19 +25,16 @@ fun BirthdayScreen(onPrev: () -> Unit, onNext: () -> Unit) {
     var month by remember { mutableStateOf(3) }
     var day by remember { mutableStateOf(16) }
 
-    val years = (1970..2024).toList()
-    val months = (1..12).toList()
-    val daysInMonth = when (month) {
-        2 -> if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) 29 else 28
-        4, 6, 9, 11 -> 30
-        else -> 31
-    }
-    val days = (1..daysInMonth).toList()
+    val years = remember { (1970..2024).toList() }
+    val months = remember { (1..12).toList() }
 
-    // Adjust day if selected day is out of bounds for new month
-    LaunchedEffect(daysInMonth) {
-        if (day > daysInMonth) day = daysInMonth
+    val daysInMonth = remember(year, month) {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.YEAR, year)
+        cal.set(Calendar.MONTH, month - 1)
+        cal.getActualMaximum(Calendar.DAY_OF_MONTH)
     }
+    val days = remember(daysInMonth) { (1..daysInMonth).toList() }
 
     val age = Calendar.getInstance().get(Calendar.YEAR) - year
 
@@ -45,12 +42,13 @@ fun BirthdayScreen(onPrev: () -> Unit, onNext: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF6F8FD))
-            .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(top = 48.dp, bottom = 40.dp)
     ) {
         // Top Nav
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -76,25 +74,33 @@ fun BirthdayScreen(onPrev: () -> Unit, onNext: () -> Unit) {
 
         Spacer(modifier = Modifier.height(56.dp))
 
-        // Title
-        Text(
-            text = "你的生日在哪一天呢",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1A1A1A),
-            letterSpacing = 1.sp
-        )
+        // Title Area
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("🎂", fontSize = 60.sp)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "你的生日在哪一天呢",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1A),
+                letterSpacing = 1.sp
+            )
+        }
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Picker Area
+        // Date Picker
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 16.dp)
                 .height(168.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Highlight bar
+            // Highlight background
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,35 +112,53 @@ fun BirthdayScreen(onPrev: () -> Unit, onNext: () -> Unit) {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                WheelPicker(items = years, value = year, onChange = { year = it }, unit = "年", modifier = Modifier.weight(1f))
-                WheelPicker(items = months, value = month, onChange = { month = it }, unit = "月", modifier = Modifier.weight(1f))
-                WheelPicker(items = days, value = day, onChange = { day = it }, unit = "日", modifier = Modifier.weight(1f))
+                WheelPicker(items = years, value = year, onChange = { year = it as Int }, unit = "年", modifier = Modifier.weight(1f))
+                WheelPicker(items = months, value = month, onChange = { month = it as Int }, unit = "月", modifier = Modifier.weight(1f))
+                WheelPicker(items = days, value = day, onChange = { day = it as Int }, unit = "日", modifier = Modifier.weight(1f))
             }
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Bottom Results & Next
-        Row(
-            modifier = Modifier.padding(bottom = 56.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        // Bottom Info & Button
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("${age}岁", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-            Text(getZodiac(month, day), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-        }
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "${age}岁",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A),
+                    letterSpacing = 2.sp
+                )
+                Text(
+                    text = getZodiac(month, day),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A),
+                    letterSpacing = 2.sp
+                )
+            }
 
-        Box(
-            modifier = Modifier
-                .size(110.dp, 54.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF667EFE))
-                .clickable { onNext() }
-                .shadow(20.dp, spotColor = Color(0xFF667EFE)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("→", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(56.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(110.dp)
+                    .height(54.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF667EFE))
+                    .clickable { onNext() }
+                    .shadow(20.dp, spotColor = Color(0x4D667EFE)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("→", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

@@ -2,13 +2,10 @@ package com.lovekey.clone.ime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +19,7 @@ import androidx.compose.ui.unit.sp
 fun QWERTYKeyboardLayout(
     mode: KeyboardMode,
     isShifted: Boolean,
+    theme: KeyboardTheme,
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
     onEnter: () -> Unit,
@@ -30,119 +28,127 @@ fun QWERTYKeyboardLayout(
     onToggleTraditional: () -> Unit,
     isTraditional: Boolean
 ) {
-    val rows = if (mode == KeyboardMode.NUMBERS) {
-        listOf(
-            listOf("1","2","3","4","5","6","7","8","9","0"),
-            listOf("-","/",":",";","(",")","$","&","@","\""),
-            listOf("符号", ".",",","?","!","'","⌫")
+    val (row1, row2, row3) = when (mode) {
+        KeyboardMode.NUMBERS -> listOf(
+            listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
+            listOf("-", "/", ":", ";", "(", ")", "$", "&", "@", "\""),
+            listOf(".", ",", "?", "!", "'")
         )
-    } else if (mode == KeyboardMode.SYMBOLS) {
-        listOf(
-            listOf("[","]","{","}","#","%","^","*","+","="),
-            listOf("_","\\","|","~","<",">","€","£","¥","•"),
-            listOf("数字", ".",",","?","!","'","⌫")
+        KeyboardMode.SYMBOLS -> listOf(
+            listOf("[", "]", "{", "}", "#", "%", "^", "*", "+", "="),
+            listOf("_", "\\", "|", "~", "<", ">", "€", "£", "¥", "•"),
+            listOf(".", ",", "?", "!", "'")
         )
-    } else {
-        listOf(
-            listOf("Q","W","E","R","T","Y","U","I","O","P"),
-            listOf("A","S","D","F","G","H","J","K","L"),
-            listOf("⇧", "Z","X","C","V","B","N","M", "⌫")
-        )
+        else -> listOf(
+            listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+            listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+            listOf("z", "x", "c", "v", "b", "n", "m")
+        ).map { row ->
+            if (isShifted) row.map { it.uppercase() } else row
+        }
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        rows.forEachIndexed { rowIndex, rowKeys ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = if (rowIndex == 1 && (mode == KeyboardMode.QWERTY_EN || mode == KeyboardMode.QWERTY_PINYIN)) 16.dp else 0.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                rowKeys.forEach { key ->
-                    val isSpecial = key == "⇧" || key == "⌫" || key == "符号" || key == "数字"
-                    Box(
-                        modifier = Modifier
-                            .weight(if (isSpecial) 1.5f else 1f)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(if (isSpecial) Color(0xFFB4BACC) else Color.White)
-                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = rememberRipple()) {
-                                when (key) {
-                                    "⌫" -> onDelete()
-                                    "⇧" -> onToggleShift()
-                                    "符号" -> onSwitchMode(KeyboardMode.SYMBOLS)
-                                    "数字" -> onSwitchMode(KeyboardMode.NUMBERS)
-                                    else -> {
-                                        val output = if (isShifted && key.length == 1) key.uppercase() else key.lowercase()
-                                        onKeyPress(output)
-                                    }
-                                }
-                            }
-                            .shadow(if (isSpecial) 0.dp else 2.dp, spotColor = Color(0x1A000000)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(if (isShifted && key.length == 1 && !isSpecial) key.uppercase() else key, fontSize = 18.sp, color = Color(0xFF1A1A1A))
-                    }
-                }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            row1.forEach { key ->
+                KeyboardKey(text = key, theme = theme, onClick = { onKeyPress(key) }, modifier = Modifier.weight(1f))
             }
         }
 
-        // Bottom Action Row
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            val isPinyinMode = mode == KeyboardMode.QWERTY_PINYIN
-            val isEnglishMode = mode == KeyboardMode.QWERTY_EN
-
-            val toggleKey = when {
-                isPinyinMode -> "中"
-                isEnglishMode -> "EN"
-                else -> "ABC"
-            }
-
-            Box(
-                modifier = Modifier.weight(1.5f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFB4BACC)).clickable {
-                    if (mode == KeyboardMode.NUMBERS || mode == KeyboardMode.SYMBOLS) {
-                        onSwitchMode(KeyboardMode.QWERTY_PINYIN)
-                    } else {
-                        onSwitchMode(KeyboardMode.NUMBERS)
-                    }
-                },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(if (mode == KeyboardMode.NUMBERS || mode == KeyboardMode.SYMBOLS) "返回" else "?123", fontSize = 14.sp)
-            }
-
-            Box(
-                modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFB4BACC)).clickable {
-                    if (isPinyinMode) onSwitchMode(KeyboardMode.QWERTY_EN) else onSwitchMode(KeyboardMode.QWERTY_PINYIN)
-                },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(toggleKey, fontSize = 14.sp)
-            }
-
-            if (isPinyinMode) {
-                 Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(if(isTraditional) Color(0xFF5C73FF) else Color(0xFFB4BACC)).clickable { onToggleTraditional() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("繁", fontSize = 14.sp, color = if(isTraditional) Color.White else Color(0xFF1A1A1A))
-                }
-            }
-
-            Box(
-                modifier = Modifier.weight(if(isPinyinMode) 3f else 4f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color.White).clickable { onKeyPress(" ") }.shadow(2.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("空格", fontSize = 14.sp)
-            }
-
-            Box(
-                modifier = Modifier.weight(1.5f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFF5C73FF)).clickable { onEnter() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text("发送", fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.Bold)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+        ) {
+            row2.forEach { key ->
+                KeyboardKey(text = key, theme = theme, onClick = { onKeyPress(key) }, modifier = Modifier.weight(1f))
             }
         }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            KeyboardKey(text = if (isShifted) "⇧" else "⬆", theme = theme, isActionKey = true, onClick = onToggleShift, modifier = Modifier.weight(1.5f))
+            row3.forEach { key ->
+                KeyboardKey(text = key, theme = theme, onClick = { onKeyPress(key) }, modifier = Modifier.weight(1f))
+            }
+            KeyboardKey(text = "⌫", theme = theme, isActionKey = true, onClick = onDelete, modifier = Modifier.weight(1.5f))
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            KeyboardKey(
+                text = if (mode == KeyboardMode.NUMBERS || mode == KeyboardMode.SYMBOLS) "ABC" else "123",
+                isActionKey = true,
+                theme = theme,
+                onClick = {
+                    if (mode == KeyboardMode.NUMBERS || mode == KeyboardMode.SYMBOLS) onSwitchMode(KeyboardMode.QWERTY_PINYIN)
+                    else onSwitchMode(KeyboardMode.NUMBERS)
+                },
+                modifier = Modifier.weight(2f)
+            )
+            KeyboardKey(text = ",", theme = theme, isActionKey = true, onClick = { onKeyPress(",") }, modifier = Modifier.weight(1f))
+            KeyboardKey(text = "Space", theme = theme, isActionKey = false, onClick = { onKeyPress(" ") }, modifier = Modifier.weight(5f))
+
+            val langLabel = when (mode) {
+                KeyboardMode.QWERTY_EN -> "En"
+                KeyboardMode.QWERTY_PINYIN -> if (isTraditional) "繁" else "简"
+                else -> "En"
+            }
+            KeyboardKey(text = langLabel, theme = theme, isActionKey = true, onClick = {
+                if (mode == KeyboardMode.QWERTY_PINYIN) {
+                    onToggleTraditional()
+                } else {
+                    onSwitchMode(if (mode == KeyboardMode.QWERTY_EN) KeyboardMode.QWERTY_PINYIN else KeyboardMode.QWERTY_EN)
+                }
+            }, modifier = Modifier.weight(1f))
+
+            // "Enter" key has special accent color treatment
+            Box(
+                modifier = Modifier
+                    .weight(2f)
+                    .height(42.dp)
+                    .shadow(1.dp, RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(theme.accentColor)
+                    .clickable { onEnter() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "发送",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun KeyboardKey(
+    text: String,
+    theme: KeyboardTheme,
+    modifier: Modifier = Modifier,
+    isActionKey: Boolean = false,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(42.dp)
+            .shadow(1.dp, RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (isActionKey) theme.actionKeyBackground else theme.keyBackground)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        val textColor = if (isActionKey) theme.actionKeyTextColor else theme.keyTextColor
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = if (isActionKey) 14.sp else 20.sp,
+            fontWeight = if (isActionKey) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }

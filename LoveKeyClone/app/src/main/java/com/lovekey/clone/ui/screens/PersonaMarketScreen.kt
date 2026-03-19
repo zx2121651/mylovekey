@@ -26,11 +26,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import com.lovekey.clone.data.PERSONAS_REPLY
 import com.lovekey.clone.data.PERSONAS_TALK
 import com.lovekey.clone.data.PersonaData
 
 
+    @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
     var subTab by remember { mutableStateOf("reply") } // "reply" | "talk"
@@ -196,12 +199,36 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
         // Category Sheet
         if (showCategorySheet) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha=0.5f)).clickable { showCategorySheet = false }, contentAlignment = Alignment.BottomCenter) {
-                Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)).background(Color(0xFFF4F5FB)).padding(24.dp).padding(bottom = 24.dp).clickable(enabled = false) {}) {
+                Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)).background(Color(0xFFF4F5FB)).padding(16.dp).padding(bottom = 48.dp).clickable(enabled = false) {}) {
                     Box(modifier = Modifier.width(40.dp).height(6.dp).clip(CircleShape).background(Color(0xFFD1D5DB)).align(Alignment.CenterHorizontally))
-                    Text("点击选择人设标签 👇", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 24.dp))
-                    // Mock tags
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        Text("关闭", color = Color(0xFF5C73FF), modifier = Modifier.clickable { showCategorySheet = false })
+
+                    Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("全部标签", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
+                        Text("✕", fontSize = 20.sp, color = Color(0xFF999999), modifier = Modifier.clickable { showCategorySheet = false })
+                    }
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val tags = if (subTab == "reply") listOf("本周排行", "New 新上架", "春节嘴替 🥳", "心动情人节", "日常必备", "感情升温", "深夜热聊", "“嘴毒”王者", "个人人设", "校园恋习生", "趣味扮演", "特色方言", "十二星座", "MBTI", "玩转职场", "恋爱零距离") else listOf("全部", "New 新上架", "春节嘴替 🥳", "聊天必备", "感情升温", "深夜热聊")
+                        tags.forEach { tag ->
+                            val isSelected = category == tag || (category == "rank" && tag == "本周排行") || (category == "all" && tag == "全部")
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) Color(0xFFE8F0FF) else Color.White)
+                                    .border(1.dp, if (isSelected) Color(0xFF5C73FF) else Color.Transparent, RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        category = if (tag == "本周排行") "rank" else if (tag == "全部") "all" else tag
+                                        showCategorySheet = false
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                            ) {
+                                Text(tag, color = if (isSelected) Color(0xFF5C73FF) else Color(0xFF1A1A1A), fontSize = 14.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                            }
+                        }
                     }
                 }
             }

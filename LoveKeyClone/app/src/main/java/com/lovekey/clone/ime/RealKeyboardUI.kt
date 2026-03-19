@@ -50,29 +50,35 @@ fun RealKeyboardUI(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(bottom = 4.dp)
     ) {
-        // --- Candidates Strip (only show when composing pinyin) ---
-        if (state.composingText.isNotEmpty()) {
+        // --- Candidates Strip & Context Actions ---
+        // We show this row if there is composing text OR if there is context text (to show the magic button)
+        if (state.composingText.isNotEmpty() || state.contextText.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth().height(44.dp).background(Color.White).padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(state.composingText, color = Color(0xFF5C73FF), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
+                if (state.composingText.isNotEmpty()) {
+                    Text(state.composingText, color = Color(0xFF5C73FF), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
 
-                Box(modifier = Modifier.weight(1f)) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(state.candidates) { cand ->
-                            val displayCand = if (state.isTraditional) ChineseUtils.convertToTraditional(cand) else cand
-                            Text(
-                                text = displayCand,
-                                color = Color(0xFF1A1A1A),
-                                fontSize = 16.sp,
-                                modifier = Modifier.clickable { onCandidateSelect(cand) }.padding(vertical = 8.dp)
-                            )
+                    Box(modifier = Modifier.weight(1f)) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(state.candidates) { cand ->
+                                val displayCand = if (state.isTraditional) ChineseUtils.convertToTraditional(cand) else cand
+                                Text(
+                                    text = displayCand,
+                                    color = Color(0xFF1A1A1A),
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.clickable { onCandidateSelect(cand) }.padding(vertical = 8.dp)
+                                )
+                            }
                         }
                     }
+                } else {
+                    // If no composing text, consume space so button stays on the right
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
                 // --- “✨ 换个说法” 悬浮触发器 ---

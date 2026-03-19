@@ -12,12 +12,20 @@ import com.lovekey.clone.ui.theme.LoveKeyCloneTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class LoveKeyInputService : InputMethodService() {
 
     private lateinit var composeView: ComposeView
     private val composeLifecycle = ComposeIMELifecycle()
     private var keyboardState by mutableStateOf(KeyboardState())
+
+    private val debounceScope = CoroutineScope(Dispatchers.Main)
+    private var debounceJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -59,8 +67,35 @@ class LoveKeyInputService : InputMethodService() {
             composingText = "",
             candidates = emptyList(),
             activePanel = ActivePanel.KEYBOARD, // Reset to standard keyboard
-            showPaywall = false
+            showPaywall = false,
+            contextText = ""
         )
+    }
+
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+
+        // Cancel previous job
+        debounceJob?.cancel()
+
+        // Start a new debounce job to fetch the text
+        debounceJob = debounceScope.launch {
+            delay(300) // 300ms debounce
+            val ic = currentInputConnection ?: return@launch
+            // Fetch text before cursor, limit to a reasonable amount (e.g., 500 chars)
+            val textBeforeCursor = ic.getTextBeforeCursor(500, 0)?.toString() ?: ""
+            // Only update context if we are in normal keyboard mode to avoid thrashing
+            if (keyboardState.activePanel == ActivePanel.KEYBOARD) {
+                keyboardState = keyboardState.copy(contextText = textBeforeCursor)
+            }
+        }
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
@@ -147,13 +182,12 @@ class LoveKeyInputService : InputMethodService() {
         }
 
         val ic = currentInputConnection ?: return
-        val contextText = ic.getTextBeforeCursor(200, 0)?.toString() ?: ""
 
-        // Use either the composing text or the text in the input box as context
+        // Use either the composing text or the existing context text tracked via onUpdateSelection
         val currentContext = if (keyboardState.composingText.isNotEmpty()) {
             keyboardState.composingText
         } else {
-            contextText
+            keyboardState.contextText
         }
 
         // Mock AI Data

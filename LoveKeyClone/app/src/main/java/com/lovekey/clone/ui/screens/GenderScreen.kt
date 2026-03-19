@@ -27,64 +27,70 @@ import com.lovekey.clone.ui.components.MaleAvatar
 fun GenderScreen(onNext: () -> Unit) {
     var selected by remember { mutableStateOf("male") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF6F8FD))
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Step Indicator
-        Row(
-            modifier = Modifier.padding(top = 40.dp, bottom = 56.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF1A1A1A)))
-            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFDCDFE6)))
-            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFDCDFE6)))
-        }
-
-        Text(
-            text = "选择性别",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1A1A1A),
-            modifier = Modifier.padding(bottom = 48.dp)
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            GenderCard(
-                type = "male",
-                label = "男",
-                isSelected = selected == "male",
-                onClick = { selected = "male" },
-                modifier = Modifier.padding(end = 20.dp)
-            )
-            GenderCard(
-                type = "female",
-                label = "女",
-                isSelected = selected == "female",
-                onClick = { selected = "female" }
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(
+        Column(
             modifier = Modifier
-                .padding(bottom = 40.dp)
-                .size(110.dp, 54.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF667EFE))
-                .clickable { onNext() }
-                .shadow(20.dp, spotColor = Color(0xFF667EFE)),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+                .padding(top = 12.dp, bottom = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Right Arrow
-            Text("→", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            // Step Indicator
+            Row(
+                modifier = Modifier.padding(top = 8.dp, bottom = 56.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF1A1A1A)))
+                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFDCDFE6)))
+                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFDCDFE6)))
+            }
+
+            Text(
+                text = "选择性别",
+                fontSize = 28.sp,
+                letterSpacing = 2.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1A),
+                modifier = Modifier.padding(bottom = 48.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                GenderCard(
+                    type = "male",
+                    label = "男",
+                    isSelected = selected == "male",
+                    onClick = { selected = "male" },
+                    modifier = Modifier.padding(end = 20.dp)
+                )
+                GenderCard(
+                    type = "female",
+                    label = "女",
+                    isSelected = selected == "female",
+                    onClick = { selected = "female" }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                modifier = Modifier
+                    .shadow(20.dp, CircleShape, spotColor = Color(0x4D667EFE))
+                    .clip(CircleShape)
+                    .background(Color(0xFF667EFE))
+                    .clickable { onNext() }
+                    .size(110.dp, 54.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                // Right Arrow
+                Text("→", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -97,7 +103,22 @@ fun GenderCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scale by animateFloatAsState(if (isSelected) 1.05f else 1.0f)
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.05f else 1.0f,
+        label = "scale"
+    )
+    val shadowSize by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isSelected) 0.dp else 16.dp,
+        label = "shadow"
+    )
+    val borderColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isSelected) Color(0xFF7F95FF) else Color.Transparent,
+        label = "border"
+    )
+    val textColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isSelected) Color(0xFF1A1A1A) else Color(0xFF666666),
+        label = "text"
+    )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -106,14 +127,14 @@ fun GenderCard(
         Box(
             modifier = Modifier
                 .size(145.dp)
+                .shadow(shadowSize, RoundedCornerShape(26.dp), spotColor = Color(0x0A000000))
                 .clip(RoundedCornerShape(26.dp))
                 .background(Color.White)
                 .border(
                     width = 2.5.dp,
-                    color = if (isSelected) Color(0xFF7F95FF) else Color.Transparent,
+                    color = borderColor,
                     shape = RoundedCornerShape(26.dp)
-                )
-                .shadow(if (isSelected) 0.dp else 16.dp, spotColor = Color(0x0A000000)),
+                ),
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -129,7 +150,7 @@ fun GenderCard(
             text = label,
             fontSize = 17.sp,
             fontWeight = FontWeight.Medium,
-            color = if (isSelected) Color(0xFF1A1A1A) else Color(0xFF666666),
+            color = textColor,
             modifier = Modifier.padding(top = 24.dp)
         )
     }

@@ -99,11 +99,11 @@ fun PersonaScreen(onPrev: () -> Unit, onNext: () -> Unit, selectedIds: List<Stri
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 40.dp)
-                .height(56.dp)
+                .shadow(if (isValidSelection) 20.dp else 0.dp, CircleShape, spotColor = Color(0x4D667EFE))
                 .clip(CircleShape)
                 .background(if (isValidSelection) Color(0xFF667EFE) else Color(0xFFA8ADB8).copy(alpha = 0.9f))
                 .clickable(enabled = isValidSelection) { onNext() }
-                .shadow(if (isValidSelection) 20.dp else 0.dp, spotColor = Color(0x4D667EFE)),
+                .height(56.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -119,14 +119,11 @@ fun PersonaScreen(onPrev: () -> Unit, onNext: () -> Unit, selectedIds: List<Stri
 
 @Composable
 fun MarqueeRow(items: List<Persona>, durationMillis: Int, selectedIds: List<String>, onToggle: (String) -> Unit) {
-    // A simplified marquee using horizontal scroll state and infinite animation
     val scrollState = rememberScrollState()
     val infiniteTransition = rememberInfiniteTransition()
 
-    // Using a very large list to simulate infinite scrolling
-    val infiniteItems = remember(items) { items + items + items + items + items + items }
+    val infiniteItems = remember(items) { items + items + items + items + items + items + items + items }
 
-    // Use absolute value to loop
     val offset by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -149,9 +146,9 @@ fun MarqueeRow(items: List<Persona>, durationMillis: Int, selectedIds: List<Stri
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState, enabled = false),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        infiniteItems.forEachIndexed { i, item ->
+        infiniteItems.forEachIndexed { _, item ->
             Tag(
                 icon = item.icon,
                 text = item.text,

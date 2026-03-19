@@ -38,7 +38,7 @@ class LoveKeyInputService : InputMethodService() {
                         onKeyPress = { handleKeyPress(it) },
                         onDelete = { handleDelete() },
                         onEnter = { handleEnter() },
-                        onAiAction = { triggerAiReply(it) },
+                        onAiAction = { triggerAiAction(it) },
                         onSwitchMode = { newMode -> keyboardState = keyboardState.copy(mode = newMode) },
                         onToggleShift = { keyboardState = keyboardState.copy(isShifted = !keyboardState.isShifted) },
                         onToggleTraditional = { keyboardState = keyboardState.copy(isTraditional = !keyboardState.isTraditional) },
@@ -55,7 +55,12 @@ class LoveKeyInputService : InputMethodService() {
         super.onStartInputView(info, restarting)
         composeLifecycle.onResume()
         // Reset composing state
-        keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
+        keyboardState = keyboardState.copy(
+            composingText = "",
+            candidates = emptyList(),
+            activePanel = ActivePanel.KEYBOARD, // Reset to standard keyboard
+            showPaywall = false
+        )
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
@@ -134,19 +139,80 @@ class LoveKeyInputService : InputMethodService() {
         }
     }
 
-    private fun triggerAiReply(tag: String) {
+    private fun triggerAiAction(action: String) {
+        // Intercept based on free usage
+        if (keyboardState.freeUsagesLeft <= 0) {
+            keyboardState = keyboardState.copy(showPaywall = true)
+            return
+        }
+
         val ic = currentInputConnection ?: return
         val contextText = ic.getTextBeforeCursor(200, 0)?.toString() ?: ""
-        val mockReplies = mapOf(
-            "高情商" to "在呼吸，在心跳，在想你呀~",
-            "心动狙击" to "在想怎么回复才能让你心动💓",
-            "幽默" to "在思考宇宙的终极奥秘...顺便想你",
-            "暖男" to "刚忙完，正准备找你呢，你今天累不累？",
-            "暧昧拉扯" to "你猜猜看？猜对有奖哦~",
-            "情场高手" to "本来在发呆，看到你的消息心跳就漏了一拍"
+
+        // Use either the composing text or the text in the input box as context
+        val currentContext = if (keyboardState.composingText.isNotEmpty()) {
+            keyboardState.composingText
+        } else {
+            contextText
+        }
+
+        // Mock AI Data
+        val mockData = listOf(
+            AiReplyCategory("高情商", "🍬", listOf("在呼吸，在心跳，在想你呀~", "本来在发呆，看到你的消息心跳就漏了一拍", "在想怎么回复才能让你心动💓")),
+            AiReplyCategory("幽默", "😆", listOf("在思考宇宙的终极奥秘...顺便想你", "在进行光合作用", "用意念给你回复中...")),
+            AiReplyCategory("暖男", "☀️", listOf("刚忙完，正准备找你呢", "今天过得怎么样？", "无论在哪，我都在你身边"))
         )
-        val reply = mockReplies[tag] ?: "[$tag] 回复: \${if(contextText.isNotEmpty()) contextText else \"你好\"}"
-        val finalReply = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(reply) else reply
-        ic.commitText(finalReply, 1)
+
+        when (action) {
+            "帮你回" -> {
+                keyboardState = keyboardState.copy(
+                    activePanel = ActivePanel.BANG_NI_HUI,
+                    contextText = currentContext
+                )
+            }
+            "超会说", "换个说法" -> {
+                keyboardState = keyboardState.copy(
+                    activePanel = ActivePanel.CHAO_HUI_SHUO,
+                    contextText = currentContext,
+                    aiLoading = true, // Start loading
+                    aiMockResults = emptyList() // Clear previous
+                )
+                // Simulate network request
+                composeView.postDelayed({
+                    keyboardState = keyboardState.copy(
+                        aiLoading = false,
+                        aiMockResults = mockData,
+                        freeUsagesLeft = keyboardState.freeUsagesLeft - 1 // Consume a usage
+                    )
+                }, 1000)
+            }
+            "Refresh" -> {
+                keyboardState = keyboardState.copy(aiLoading = true)
+                composeView.postDelayed({
+                    keyboardState = keyboardState.copy(
+                        aiLoading = false,
+                        aiMockResults = mockData.shuffled() // Mock a refresh
+                    )
+                }, 600)
+            }
+            "CloseAi" -> {
+                keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
+            }
+            "PaywallClose" -> {
+                keyboardState = keyboardState.copy(showPaywall = false)
+            }
+            "Purchase" -> {
+                // Mock purchase success -> infinite uses
+                keyboardState = keyboardState.copy(
+                    showPaywall = false,
+                    freeUsagesLeft = 9999
+                )
+            }
+            else -> {
+                val finalReply = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(action) else action
+                commitDirectly(finalReply)
+                keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
+            }
+        }
     }
 }

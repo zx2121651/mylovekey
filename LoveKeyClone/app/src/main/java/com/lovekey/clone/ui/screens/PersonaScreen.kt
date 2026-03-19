@@ -16,9 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lovekey.clone.data.MockData.GROUPS
+import com.lovekey.clone.data.Persona
 import com.lovekey.clone.ui.components.Tag
 import kotlinx.coroutines.isActive
 
@@ -71,7 +73,7 @@ fun PersonaScreen(onPrev: () -> Unit, onNext: () -> Unit, selectedIds: List<Stri
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
             letterSpacing = 1.sp
         )
 
@@ -116,7 +118,7 @@ fun PersonaScreen(onPrev: () -> Unit, onNext: () -> Unit, selectedIds: List<Stri
 }
 
 @Composable
-fun MarqueeRow(items: List<com.lovekey.clone.data.Persona>, durationMillis: Int, selectedIds: List<String>, onToggle: (String) -> Unit) {
+fun MarqueeRow(items: List<Persona>, durationMillis: Int, selectedIds: List<String>, onToggle: (String) -> Unit) {
     // A simplified marquee using horizontal scroll state and infinite animation
     val scrollState = rememberScrollState()
     val infiniteTransition = rememberInfiniteTransition()
@@ -131,7 +133,7 @@ fun MarqueeRow(items: List<com.lovekey.clone.data.Persona>, durationMillis: Int,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
-        )
+        ), label = "marqueeOffset"
     )
 
     LaunchedEffect(offset) {
@@ -154,8 +156,8 @@ fun MarqueeRow(items: List<com.lovekey.clone.data.Persona>, durationMillis: Int,
                 icon = item.icon,
                 text = item.text,
                 hot = item.hot,
-                isSelected = selectedIds.contains(item.id),
-                onToggle = { onToggle(item.id) }
+                isSelected = selectedIds.contains(item.id.toString()),
+                onToggle = { onToggle(item.id.toString()) }
             )
         }
     }

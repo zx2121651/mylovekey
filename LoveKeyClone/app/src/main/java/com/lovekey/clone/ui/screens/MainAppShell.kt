@@ -1,27 +1,18 @@
 package com.lovekey.clone.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -30,8 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import com.lovekey.clone.data.MockData.PERSONAS_REPLY
-import com.lovekey.clone.data.MockData.PERSONAS_TALK
 
 @Composable
 fun MainAppShell() {
@@ -39,114 +28,102 @@ fun MainAppShell() {
     var showLogin by remember { mutableStateOf(false) }
     var showKeyboard by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF4F5FB))
-    ) {
-        // Main Content Area
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 75.dp) // Leave space for bottom nav
-        ) {
-            when (activeTab) {
-                "home" -> AppHomeScreen(onShowLogin = { showLogin = true }, onShowKeyboard = { showKeyboard = true })
-                "market" -> PersonaMarketScreen(onShowKeyboard = { showKeyboard = true })
-                "keyboard" -> MyKeyboardScreen()
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F5FB))) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                when (activeTab) {
+                    "home" -> AppHomeScreen(onShowLogin = { showLogin = true }, onShowKeyboard = { showKeyboard = true })
+                    "market" -> PersonaMarketScreen(onShowKeyboard = { showKeyboard = true })
+                    "keyboard" -> MyKeyboardScreen()
+                }
+            }
+
+            // Bottom Nav
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(75.dp)
+                    .background(Color(0xFFF4F5FB))
+                    .shadow(20.dp, spotColor = Color(0x05000000))
+                .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                NavTabButton("首页", "💬", activeTab == "home") { activeTab = "home" }
+                NavTabButton("人设市场", "🌟", activeTab == "market") { activeTab = "market" }
+                NavTabButton("我的键盘", "⌨", activeTab == "keyboard") { activeTab = "keyboard" }
             }
         }
 
-        // Bottom Navigation Bar
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(75.dp)
-                .background(Color(0xFFF4F5FB))
-                .shadow(20.dp, spotColor = Color(0x05000000))
-                .padding(bottom = 20.dp, top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            NavTabButton(active = activeTab == "home", label = "首页", icon = "💬", onClick = { activeTab = "home" })
-            NavTabButton(active = activeTab == "market", label = "人设市场", icon = "🛒", onClick = { activeTab = "market" })
-            NavTabButton(active = activeTab == "keyboard", label = "我的键盘", icon = "⌨", onClick = { activeTab = "keyboard" })
-        }
-
-        // Modals
         if (showLogin) LoginModal(onClose = { showLogin = false })
         if (showKeyboard) KeyboardSwitchModal(onClose = { showKeyboard = false })
     }
 }
 
 @Composable
-fun NavTabButton(active: Boolean, label: String, icon: String, onClick: () -> Unit) {
+fun RowScope.NavTabButton(label: String, icon: String, active: Boolean, onClick: () -> Unit) {
     Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.weight(1f).clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(if (active) 48.dp else 32.dp)
-                .offset(y = if (active) (-12).dp else 0.dp)
-                .clip(RoundedCornerShape(if (active) 16.dp else 8.dp))
-                .then(if (active) Modifier.background(Brush.linearGradient(colors = listOf(Color.White, Color(0xFFE2E6F2)))) else Modifier.background(Color.Transparent))
-                .border(if (active) 1.dp else 0.dp, if (active) Color.White else Color.Transparent, RoundedCornerShape(16.dp))
-                .shadow(if (active) 12.dp else 0.dp, spotColor = Color(0x99A0AFD2)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(icon, fontSize = if (active) 24.sp else 20.sp)
+        val color = if (active) Color(0xFF5C73FF) else Color(0xFF999999)
+        if (active) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.linearGradient(listOf(Color.White, Color(0xFFE2E6F2))))
+                    .border(1.dp, Color.White.copy(alpha=0.8f), RoundedCornerShape(16.dp))
+                    .shadow(16.dp, spotColor = Color(0x99A0AFD2)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(icon, fontSize = 24.sp, color = color)
+            }
+        } else {
+            Text(icon, fontSize = 24.sp, color = color, modifier = Modifier.padding(bottom = 4.dp))
         }
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (active) Color(0xFF5C73FF) else Color(0xFF999999),
-            modifier = Modifier.offset(y = if (active) (-8).dp else 4.dp)
-        )
+        Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = color)
     }
 }
 
 @Composable
 fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
-    var timeLeft by remember { mutableIntStateOf(11 * 3600 + 59 * 45) }
-    val scrollState = rememberScrollState()
+    var timeLeft by remember { mutableStateOf(11 * 3600 + 59 * 45) }
 
     LaunchedEffect(Unit) {
-        while (timeLeft > 0) {
+        while (true) {
             delay(1000)
-            timeLeft--
+            if (timeLeft > 0) timeLeft--
         }
     }
 
-    val formatTime = { seconds: Int ->
+    fun formatTime(seconds: Int): String {
         val h = (seconds / 3600).toString().padStart(2, '0')
         val m = ((seconds % 3600) / 60).toString().padStart(2, '0')
         val s = (seconds % 60).toString().padStart(2, '0')
-        "$h:$m:$s.8"
+        return "$h:$m:$s.8"
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier.fillMaxWidth().height(550.dp).background(Brush.verticalGradient(listOf(Color(0xFFE2E6FF), Color(0xFFEEF0FA), Color(0xFFF4F5FB)))))
+        Box(modifier = Modifier.fillMaxWidth().height(550.dp).background(
+            Brush.verticalGradient(listOf(Color(0xFFE2E6FF), Color(0xFFEEF0FA), Color(0xFFF4F5FB)))
+        ))
 
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(bottom = 120.dp)) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             // Header
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                Row(modifier = Modifier.clip(CircleShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6B22), Color(0xFFFF4500)))).padding(horizontal = 14.dp, vertical = 6.dp).shadow(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("L+", color = Color(0xFFFF4500), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFFFFE066)).padding(horizontal = 4.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("立减 90", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White).clickable { onShowLogin() }.shadow(2.dp), contentAlignment = Alignment.Center) {
-                    Text("👤", fontSize = 18.sp)
+            Row(modifier = Modifier.fillMaxWidth().height(60.dp).padding(horizontal = 20.dp).padding(top = 8.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.clip(CircleShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6B22), Color(0xFFFF4500)))).padding(horizontal = 14.dp, vertical = 6.dp)) {
+                        Text("立减 90", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White).border(1.dp, Color(0xFFF3F4F6), CircleShape).clickable { onShowLogin() }.shadow(2.dp), contentAlignment = Alignment.Center) {
+                        Text("👤", fontSize = 18.sp)
+                    }
                 }
             }
 
-            // Big Heart Area
+            // Main Intimacy Area
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xFFB3CAFF)).padding(horizontal = 14.dp, vertical = 6.dp)) {
                     Text("推荐亲密度", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -187,53 +164,6 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
 
             // App settings cards, mock implementation
             Spacer(modifier = Modifier.height(200.dp))
-        }
-    }
-}
-
-@Composable
-fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
-    var subTab by remember { mutableStateOf("reply") }
-    var category by remember { mutableStateOf("rank") }
-
-    val activePersonas = if (subTab == "reply") PERSONAS_REPLY else PERSONAS_TALK
-
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F5FB))) {
-        // Header
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 48.dp, start = 20.dp, end = 20.dp, bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("人设市场", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color(0xFF1A1A1A))
-            Box(modifier = Modifier.clip(CircleShape).background(Color.White).border(1.dp, Color.White, CircleShape).padding(horizontal = 14.dp, vertical = 6.dp).shadow(2.dp)) {
-                Text("⌨ 我的键盘", color = Color(0xFF555555), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-
-        // Tabs
-        Row(modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 16.dp)) {
-            Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)).background(if (subTab == "reply") Color.White else Color.Transparent).clickable { subTab = "reply" }, contentAlignment = Alignment.Center) {
-                Text("帮你回", color = if (subTab == "reply") Color(0xFF1A1A1A) else Color(0xFFA0A5B5), fontSize = 19.sp, fontWeight = FontWeight.Black)
-            }
-            Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)).background(if (subTab == "talk") Color.White else Color.Transparent).clickable { subTab = "talk" }, contentAlignment = Alignment.Center) {
-                Text("超会说", color = if (subTab == "talk") Color(0xFF1A1A1A) else Color(0xFFA0A5B5), fontSize = 19.sp, fontWeight = FontWeight.Black)
-            }
-        }
-
-        // List
-        LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f).background(Color.White).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-            items(activePersonas.size) { index ->
-                val p = activePersonas[index]
-                Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color.White).border(1.dp, Color(0xFFF3F4F6), RoundedCornerShape(24.dp)).padding(16.dp).shadow(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(Color(0xFFF4F5FB)), contentAlignment = Alignment.Center) { Text("👤", fontSize = 32.sp) }
-                    Column(modifier = Modifier.weight(1f).padding(horizontal = 16.dp)) {
-                        Text(p.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                        Text(p.desc, fontSize = 13.sp, color = Color(0xFF999999), modifier = Modifier.padding(top = 4.dp))
-                    }
-                    Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(if (p.added) Color(0xFFF4F5FB) else Color(0xFF5C73FF)), contentAlignment = Alignment.Center) {
-                        Text(if (p.added) "✓" else "+", color = if (p.added) Color(0xFF333333) else Color.White, fontSize = if (p.added) 16.sp else 20.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-            item { Spacer(modifier = Modifier.height(120.dp)) }
         }
     }
 }

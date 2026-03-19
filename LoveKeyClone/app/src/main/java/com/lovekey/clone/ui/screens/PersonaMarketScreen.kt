@@ -12,28 +12,179 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.text.TextStyle
 import com.lovekey.clone.data.PERSONAS_REPLY
 import com.lovekey.clone.data.PERSONAS_TALK
 import com.lovekey.clone.data.PersonaData
 
+data class CategoryItem(
+    val id: String,
+    val label: String,
+    val special: String = "normal"
+)
 
-    @OptIn(ExperimentalLayoutApi::class)
+val CATEGORIES_REPLY = listOf(
+    CategoryItem("rank", "本周排行", "gold"),
+    CategoryItem("新上架", "新上架", "pink"),
+    CategoryItem("春节嘴替", "春节嘴替", "red"),
+    CategoryItem("心动情人节", "心动情人节"),
+    CategoryItem("日常必备", "日常必备"),
+    CategoryItem("感情升温", "感情升温"),
+    CategoryItem("深夜热聊", "深夜热聊"),
+    CategoryItem("“嘴毒”王者", "“嘴毒”王者"),
+    CategoryItem("个人设", "个人设"),
+    CategoryItem("校园恋习生", "校园恋习生"),
+    CategoryItem("趣味扮演", "趣味扮演"),
+    CategoryItem("特色方言", "特色方言"),
+    CategoryItem("十二星座", "十二星座"),
+    CategoryItem("MBTI", "MBTI"),
+    CategoryItem("玩转职场", "玩转职场"),
+    CategoryItem("恋爱零距离", "恋爱零距离")
+)
+
+val CATEGORIES_TALK = listOf(
+    CategoryItem("all", "全部", "orange"),
+    CategoryItem("新上架", "新上架", "pink"),
+    CategoryItem("春节嘴替", "春节嘴替", "normal"),
+    CategoryItem("聊天必备", "聊天必备", "normal"),
+    CategoryItem("感情升温", "感情升温", "normal"),
+    CategoryItem("嘴毒王者", "嘴毒王者", "normal"),
+    CategoryItem("搞怪逗趣", "搞怪逗趣", "normal"),
+    CategoryItem("朋友圈", "朋友圈", "normal"),
+    CategoryItem("玩转职场", "玩转职场", "normal")
+)
+
+@Composable
+fun MarketCategoryTag(cat: CategoryItem, active: Boolean, onClick: () -> Unit) {
+    val scale = if (active) 1.03f else 1f
+    val modifier = Modifier
+        .padding(horizontal = 4.dp)
+        .clip(CircleShape)
+        .clickable(onClick = onClick)
+
+    when (cat.special) {
+        "gold" -> {
+            Box(
+                modifier = modifier
+                    .background(Brush.horizontalGradient(listOf(Color(0xFFFFF4D6), Color(0xFFFFE0A3))))
+                    .border(1.5.dp, Color(0xFFFFD980), CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Text("🌿 ${cat.label} 🌿", color = Color(0xFFA66E00), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        "pink" -> {
+            Box(
+                modifier = modifier
+                    .background(Color(0xFFFFF0F5))
+                    .border(1.5.dp, Color(0xFFFFD1E3), CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("New", fontStyle = FontStyle.Italic, fontWeight = FontWeight.Black, color = Color(0xFFFF85E3), fontSize = 13.sp, modifier = Modifier.padding(end = 4.dp))
+                    Text(cat.label, color = Color(0xFFFF4B8B), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        "red" -> {
+            Box(
+                modifier = modifier
+                    .background(Color(0xFFFFF0F0))
+                    .border(1.5.dp, Color(0xFFFFD6D6), CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Text("🧧 ${cat.label} 🧧", color = Color(0xFFE02020), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        "orange" -> {
+            Box(
+                modifier = modifier
+                    .background(Color(0xFFFFA033))
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+            ) {
+                Text(cat.label, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        else -> {
+            Box(
+                modifier = modifier
+                    .background(if (active) Color(0xFFF9FAFB) else Color.White)
+                    .border(1.5.dp, if (active) Color(0xFF5C73FF) else Color(0xFFF3F4F6), CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Text(cat.label, color = if (active) Color(0xFF5C73FF) else Color(0xFF555555), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun RankBadge(rank: Int?) {
+    if (rank == null) return
+    val isTop1 = rank == 1
+    val isTop2 = rank == 2
+    val isTop3 = rank == 3
+
+    if (rank <= 3) {
+        val bgGradient = when {
+            isTop1 -> listOf(Color(0xFFFFEDA6), Color(0xFFFFC94D))
+            isTop2 -> listOf(Color(0xFFE1ECFF), Color(0xFFA3C4FF))
+            else -> listOf(Color(0xFFFFDEC2), Color(0xFFFFA673))
+        }
+        val textColor = when {
+            isTop1 -> Color(0xFF8A5A00)
+            isTop2 -> Color(0xFF365A96)
+            else -> Color(0xFF8A4613)
+        }
+
+        val ribbonShape = GenericShape { size, _ ->
+            moveTo(0f, 0f)
+            lineTo(size.width, 0f)
+            lineTo(size.width, size.height * 0.75f)
+            lineTo(size.width / 2f, size.height)
+            lineTo(0f, size.height * 0.75f)
+            close()
+        }
+
+        Box(
+            modifier = Modifier
+                .width(28.dp)
+                .height(36.dp)
+                .shadow(2.dp, ribbonShape, spotColor = Color(0x26000000))
+                .clip(ribbonShape)
+                .background(Brush.verticalGradient(bgGradient)),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 3.dp)) {
+                Text("TOP", fontSize = 8.sp, fontWeight = FontWeight.Black, color = textColor, lineHeight = 8.sp, letterSpacing = (-0.5).sp)
+                Text(rank.toString(), fontSize = 15.sp, fontWeight = FontWeight.Black, color = textColor, lineHeight = 15.sp)
+            }
+        }
+    } else {
+        Text(rank.toString(), fontSize = 20.sp, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Black, color = Color(0xFF0F172A), modifier = Modifier.width(28.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
     var subTab by remember { mutableStateOf("reply") } // "reply" | "talk"
@@ -41,6 +192,7 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
     var showCategorySheet by remember { mutableStateOf(false) }
 
     val activePersonas = if (subTab == "reply") PERSONAS_REPLY else PERSONAS_TALK
+    val activeCategories = if (subTab == "reply") CATEGORIES_REPLY else CATEGORIES_TALK
 
     val addedIds = remember { mutableStateListOf<String>().apply {
         addAll((PERSONAS_REPLY + PERSONAS_TALK).filter { it.added }.map { it.id })
@@ -97,22 +249,74 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                 }
             }
 
+            // Banner
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(90.dp)
+                    .shadow(1.dp, RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Brush.horizontalGradient(listOf(Color(0xFFFFD1ED), Color(0xFFFFE8F3), Color(0xFFFFD1ED))))
+            ) {
+                // Background Pattern (simplified)
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.5f).align(Alignment.CenterEnd).background(Color.White.copy(alpha = 0.2f)))
+
+                // Tag
+                Box(modifier = Modifier.align(Alignment.TopStart).background(Color(0xFFC88B4B), RoundedCornerShape(bottomEnd = 10.dp)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                    Text("热门推荐", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+
+                // Title
+                Column(modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp, top = 8.dp)) {
+                    Text("键盘轻松应对", color = Color(0xFF1A1A1A), fontSize = 20.sp, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.rotate(-2f))
+                    Text("各种场景", color = Color(0xFF1A1A1A), fontSize = 20.sp, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.rotate(-2f))
+                }
+
+                // Decorative cards
+                Box(modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    Row {
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp, 60.dp)
+                                .rotate(-10f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0xFFFFB6C1))
+                                .border(2.dp, Color.White, RoundedCornerShape(14.dp))
+                                .shadow(2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("👩", fontSize = 28.sp)
+                            Box(modifier = Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp).background(Color(0xFFE8A5FF), RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 2.dp).rotate(10f)) {
+                                Text("脱单局", color = Color.White, fontSize = 8.sp)
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp, 60.dp)
+                                .rotate(10f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0xFFB0C4DE))
+                                .border(2.dp, Color.White, RoundedCornerShape(14.dp))
+                                .shadow(2.dp)
+                                .offset(y = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("👦", fontSize = 28.sp)
+                            Box(modifier = Modifier.align(Alignment.TopStart).offset(x = (-4).dp, y = (-4).dp).background(Color(0xFFB5BFFF), RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 2.dp).rotate(-10f)) {
+                                Text("社交局", color = Color.White, fontSize = 8.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             // Categories
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val cats = if (subTab == "reply") listOf("本周排行", "新上架", "春节嘴替", "心动情人节", "日常必备", "感情升温") else listOf("全部", "新上架", "春节嘴替", "聊天必备", "感情升温")
-                    cats.forEach { cat ->
-                        val isSelected = category == cat || (category == "rank" && cat == "本周排行") || (category == "all" && cat == "全部")
-                        Box(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(if (isSelected) Color.White else Color.White.copy(alpha=0.7f))
-                                .border(1.5.dp, if (isSelected) Color(0xFF5C73FF) else Color(0xFFF3F4F6), CircleShape)
-                                .clickable { category = if (cat == "本周排行") "rank" else if (cat == "全部") "all" else cat }
-                                .padding(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Text(cat, color = if (isSelected) Color(0xFF5C73FF) else Color(0xFF555555), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        }
+                    activeCategories.forEach { cat ->
+                        MarketCategoryTag(cat = cat, active = category == cat.id, onClick = { category = cat.id })
                     }
                 }
                 Text(" ≡ ", color = Color(0xFFA0A5B5), fontSize = 22.sp, modifier = Modifier.padding(start = 8.dp).clickable { showCategorySheet = true })
@@ -128,13 +332,13 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Avatar
-                            Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
-                                Box(modifier = Modifier.size(60.dp).align(Alignment.CenterEnd).clip(CircleShape).border(2.dp, Color.White, CircleShape).background(Color(0xFFF4F5FB))) {
+                            Box(modifier = Modifier.size(84.dp, 64.dp), contentAlignment = Alignment.CenterStart) {
+                                Box(modifier = Modifier.size(64.dp).align(Alignment.CenterEnd).clip(CircleShape).border(2.dp, Color.White, CircleShape).background(Color(0xFFF4F5FB)).shadow(4.dp, CircleShape, clip = false)) {
                                     Text("👤", fontSize = 32.sp, modifier = Modifier.align(Alignment.Center))
                                 }
                                 if (p.rank != null) {
-                                    Box(modifier = Modifier.align(Alignment.CenterStart).offset(x = (-4).dp)) {
-                                        Text(p.rank.toString(), fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color(0xFF0F172A))
+                                    Box(modifier = Modifier.align(Alignment.CenterStart)) {
+                                        RankBadge(rank = p.rank)
                                     }
                                 }
                             }
@@ -212,22 +416,11 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val tags = if (subTab == "reply") listOf("本周排行", "New 新上架", "春节嘴替 🥳", "心动情人节", "日常必备", "感情升温", "深夜热聊", "“嘴毒”王者", "个人人设", "校园恋习生", "趣味扮演", "特色方言", "十二星座", "MBTI", "玩转职场", "恋爱零距离") else listOf("全部", "New 新上架", "春节嘴替 🥳", "聊天必备", "感情升温", "深夜热聊")
-                        tags.forEach { tag ->
-                            val isSelected = category == tag || (category == "rank" && tag == "本周排行") || (category == "all" && tag == "全部")
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) Color(0xFFE8F0FF) else Color.White)
-                                    .border(1.dp, if (isSelected) Color(0xFF5C73FF) else Color.Transparent, RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        category = if (tag == "本周排行") "rank" else if (tag == "全部") "all" else tag
-                                        showCategorySheet = false
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp)
-                            ) {
-                                Text(tag, color = if (isSelected) Color(0xFF5C73FF) else Color(0xFF1A1A1A), fontSize = 14.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-                            }
+                        activeCategories.forEach { cat ->
+                            MarketCategoryTag(cat = cat, active = category == cat.id, onClick = {
+                                category = cat.id
+                                showCategorySheet = false
+                            })
                         }
                     }
                 }

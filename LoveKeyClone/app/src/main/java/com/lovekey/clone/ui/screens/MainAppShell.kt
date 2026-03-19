@@ -53,7 +53,7 @@ fun MainAppShell() {
             when (activeTab) {
                 "home" -> AppHomeScreen(onShowLogin = { showLogin = true }, onShowKeyboard = { showKeyboard = true })
                 "market" -> PersonaMarketScreen(onShowKeyboard = { showKeyboard = true })
-                "keyboard" -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("我的键盘模块开发中...", color = Color.Gray) }
+                "keyboard" -> MyKeyboardScreen()
             }
         }
 

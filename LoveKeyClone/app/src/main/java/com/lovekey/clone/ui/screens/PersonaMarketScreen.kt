@@ -374,13 +374,23 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                         val p = activePersonas[index]
                         val isAdded = addedIds.contains(p.id)
                         Box(
-                            modifier = Modifier.height(175.dp).shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Color(0x08000000)).clip(RoundedCornerShape(24.dp)).background(Color.White).clickable { toggleAdd(p.id) }.padding(12.dp)
+                            modifier = Modifier.height(175.dp).shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Color(0x08000000)).clip(RoundedCornerShape(24.dp)).background(Color.White).clickable { toggleAdd(p.id) }.padding(16.dp)
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                Text(p.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                                Text(p.desc, fontSize = 13.sp, color = Color(0xFF888888), modifier = Modifier.padding(top = 12.dp).fillMaxWidth(0.7f), lineHeight = 18.sp)
+                                Box(modifier = Modifier.wrapContentSize()) {
+                                    androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize().offset(y = 12.dp)) {
+                                        val wavePath = androidx.compose.ui.graphics.Path().apply {
+                                            moveTo(0f, size.height)
+                                            quadraticBezierTo(size.width * 0.12f, size.height - 4.dp.toPx(), size.width * 0.25f, size.height)
+                                            quadraticBezierTo(size.width * 0.5f, size.height, size.width * 0.75f, size.height)
+                                        }
+                                        drawPath(wavePath, color = Color(0xFFFFD233), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                                    }
+                                    Text(p.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.padding(bottom = 2.dp))
+                                }
+                                Text(p.desc, fontSize = 13.sp, color = Color(0xFF888888), modifier = Modifier.padding(top = 10.dp).fillMaxWidth(0.7f), lineHeight = 18.sp)
                             }
-                            Text("“", fontSize = 80.sp, color = Color(0xFFF4F5FB), fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.BottomStart).offset(x = 4.dp, y = 10.dp))
+                            Text("“", fontSize = 80.sp, color = Color(0xFFF4F5FB), fontFamily = androidx.compose.ui.text.font.FontFamily.Serif, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.BottomStart).offset(x = 0.dp, y = 12.dp))
 
                             Box(modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = 32.dp).size(52.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFFF4F5FB)), contentAlignment = Alignment.Center) {
                                 Text("👤", fontSize = 28.sp)

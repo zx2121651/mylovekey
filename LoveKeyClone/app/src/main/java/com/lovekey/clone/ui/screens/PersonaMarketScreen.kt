@@ -280,10 +280,10 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                             modifier = Modifier
                                 .size(50.dp, 60.dp)
                                 .rotate(-10f)
+                                .shadow(2.dp, RoundedCornerShape(14.dp))
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(Color(0xFFFFB6C1))
-                                .border(2.dp, Color.White, RoundedCornerShape(14.dp))
-                                .shadow(2.dp),
+                                .border(2.dp, Color.White, RoundedCornerShape(14.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text("👩", fontSize = 28.sp)
@@ -296,11 +296,11 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                             modifier = Modifier
                                 .size(50.dp, 60.dp)
                                 .rotate(10f)
+                                .offset(y = 12.dp)
+                                .shadow(2.dp, RoundedCornerShape(14.dp))
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(Color(0xFFB0C4DE))
-                                .border(2.dp, Color.White, RoundedCornerShape(14.dp))
-                                .shadow(2.dp)
-                                .offset(y = 12.dp),
+                                .border(2.dp, Color.White, RoundedCornerShape(14.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text("👦", fontSize = 28.sp)

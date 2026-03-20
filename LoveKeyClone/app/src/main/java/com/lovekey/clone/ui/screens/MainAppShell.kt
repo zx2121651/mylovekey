@@ -209,10 +209,10 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
                             modifier = Modifier
                                 .size(60.dp, 70.dp)
                                 .rotate(-10f)
+                                .shadow(4.dp, RoundedCornerShape(16.dp))
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(Color(0xFFFFB6C1))
-                                .border(3.dp, Color.White, RoundedCornerShape(16.dp))
-                                .shadow(4.dp),
+                                .border(3.dp, Color.White, RoundedCornerShape(16.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text("👩", fontSize = 34.sp)
@@ -224,11 +224,11 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
                             modifier = Modifier
                                 .size(60.dp, 70.dp)
                                 .rotate(10f)
+                                .offset(x = (-8).dp, y = 12.dp)
+                                .shadow(4.dp, RoundedCornerShape(16.dp))
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(Color(0xFFB0C4DE))
-                                .border(3.dp, Color.White, RoundedCornerShape(16.dp))
-                                .shadow(4.dp)
-                                .offset(x = (-8).dp, y = 12.dp),
+                                .border(3.dp, Color.White, RoundedCornerShape(16.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text("👦", fontSize = 34.sp)

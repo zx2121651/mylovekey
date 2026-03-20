@@ -32,37 +32,38 @@ fun PersonaScreen(onPrev: () -> Unit, onNext: () -> Unit, selectedIds: List<Stri
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF6F8FD))
-            .padding(top = 48.dp, bottom = 40.dp)
     ) {
         // Top Nav
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 48.dp, bottom = 12.dp)
+                .padding(horizontal = 24.dp)
         ) {
             Box(
                 modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .shadow(8.dp, RoundedCornerShape(14.dp), spotColor = Color(0x0A000000))
                     .size(42.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(Color.White)
-                    .clickable { onPrev() }
-                    .shadow(8.dp, spotColor = Color(0x0A000000)),
+                    .clickable { onPrev() },
                 contentAlignment = Alignment.Center
             ) {
-                Text("<", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
+                Text("<", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.offset(y = (-2).dp))
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+            Row(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFDCDFE6)))
                 Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFDCDFE6)))
                 Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF1A1A1A)))
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(42.dp))
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
         // Title
         Text(
@@ -98,7 +99,8 @@ fun PersonaScreen(onPrev: () -> Unit, onNext: () -> Unit, selectedIds: List<Stri
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 40.dp)
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 40.dp)
                 .shadow(if (isValidSelection) 20.dp else 0.dp, CircleShape, spotColor = Color(0x4D667EFE))
                 .clip(CircleShape)
                 .background(if (isValidSelection) Color(0xFF667EFE) else Color(0xFFA8ADB8).copy(alpha = 0.9f))

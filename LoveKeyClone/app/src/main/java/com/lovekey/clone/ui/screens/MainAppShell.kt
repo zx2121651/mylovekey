@@ -13,9 +13,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -146,7 +148,7 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
             }
 
             // Upsell Banner
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp).clip(RoundedCornerShape(24.dp)).background(Color.White).padding(16.dp).shadow(2.dp, spotColor = Color(0x05000000)), verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp).shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Color(0x05000000)).border(1.dp, Color(0xFFF9FAFB), RoundedCornerShape(24.dp)).clip(RoundedCornerShape(24.dp)).background(Color.White).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("🎟", fontSize = 32.sp)
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -162,8 +164,49 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
                 }
             }
 
-            // App settings cards, mock implementation
+            // App settings cards
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(modifier = Modifier.weight(1f).height(125.dp).shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Color(0x05000000)).clip(RoundedCornerShape(24.dp)).background(Color.White).padding(20.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(16.dp)).background(Brush.verticalGradient(listOf(Color(0xFFB8CDFF), Color(0xFF6A8EFF)))).border(1.dp, Color.White, RoundedCornerShape(16.dp)))
+                        Text("→", color = Color(0xFFD1D5DB), modifier = Modifier.rotate(-45f))
+                    }
+                    Column {
+                        Text("聊天人设市场", color = Color(0xFF222222), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text("添加更多人设", color = Color(0xFF999999), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    }
+                }
+                Column(modifier = Modifier.weight(1f).height(125.dp).shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Color(0x05000000)).clip(RoundedCornerShape(24.dp)).background(Color.White).padding(20.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(16.dp)).background(Brush.verticalGradient(listOf(Color(0xFFFFD2C2), Color(0xFFFF8C7A)))).border(1.dp, Color.White, RoundedCornerShape(16.dp)))
+                        Text("→", color = Color(0xFFD1D5DB), modifier = Modifier.rotate(-45f))
+                    }
+                    Column {
+                        Text("定制聊天人设", color = Color(0xFF222222), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text("量身打造", color = Color(0xFF999999), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(200.dp))
+        }
+
+        // Floating Buy One Get One Free Widget
+        Box(modifier = Modifier.align(Alignment.CenterEnd).offset(x = 15.dp, y = 100.dp).size(105.dp).shadow(30.dp, RoundedCornerShape(28.dp), spotColor = Color(0x665C73FF)).clip(RoundedCornerShape(28.dp)).background(Brush.linearGradient(listOf(Color(0xFFE8EEFF), Color(0xFFA0B8FF)))).border(3.dp, Color.White, RoundedCornerShape(28.dp))) {
+            Box(modifier = Modifier.align(Alignment.TopEnd).offset(x = (-8).dp, y = 4.dp).rotate(-6f).clip(CircleShape).background(Color(0xFF5C73FF)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                Text("新户专享", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+            Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Text("买一月", color = Color.Transparent, fontSize = 18.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic)
+                Text("送一月", color = Color.Transparent, fontSize = 18.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic)
+                Box(modifier = Modifier.padding(top = 6.dp).clip(CircleShape).background(Color(0xFFFF4B6B)).padding(horizontal = 12.dp, vertical = 2.dp)) {
+                    Text("59:20", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            Row(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 12.dp).height(12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color(0xFFFFE03B)))
+                Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color(0xFF00E676)))
+                Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color(0xFFFF4081)))
+            }
         }
     }
 }

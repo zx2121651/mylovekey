@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -187,11 +188,127 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(200.dp))
+
+            // Banner
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .height(95.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Brush.horizontalGradient(listOf(Color(0xFFFFD1ED), Color(0xFFFFE8F3), Color(0xFFFFD1ED))))
+            ) {
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.5f).align(Alignment.CenterEnd).background(Color.White.copy(alpha = 0.2f)))
+                Column(modifier = Modifier.align(Alignment.CenterStart).padding(start = 24.dp)) {
+                    Text("键盘轻松应对", color = Color(0xFF1A1A1A), fontSize = 22.sp, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.rotate(-2f))
+                    Text("各种场景", color = Color(0xFF1A1A1A), fontSize = 22.sp, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.rotate(-2f))
+                }
+                Box(modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    Row {
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp, 70.dp)
+                                .rotate(-10f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFFFB6C1))
+                                .border(3.dp, Color.White, RoundedCornerShape(16.dp))
+                                .shadow(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("👩", fontSize = 34.sp)
+                            Box(modifier = Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp).background(Color(0xFFE8A5FF), RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 2.dp).rotate(10f)) {
+                                Text("脱单局", color = Color.White, fontSize = 9.sp)
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp, 70.dp)
+                                .rotate(10f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFB0C4DE))
+                                .border(3.dp, Color.White, RoundedCornerShape(16.dp))
+                                .shadow(4.dp)
+                                .offset(x = (-8).dp, y = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("👦", fontSize = 34.sp)
+                            Box(modifier = Modifier.align(Alignment.TopStart).offset(x = (-4).dp, y = (-4).dp).background(Color(0xFFB5BFFF), RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 2.dp).rotate(-10f)) {
+                                Text("社交局", color = Color.White, fontSize = 9.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // My Keyboard
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("我的键盘", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color(0xFF222222))
+                    Text("修改键盘排序 ＞", fontSize = 13.sp, color = Color(0xFF999999))
+                }
+                androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                    columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(3),
+                    modifier = Modifier.height(180.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    userScrollEnabled = false
+                ) {
+                    val labels = listOf("🍬 高情商", "😘 心动狙击", "😆 幽默", "☀️ 暖男", "💋 暧昧拉扯", "🎀 情场高手", "👨‍⚖️ 温柔大叔", "🎁 风流浪子", "😋 幽默有梗")
+                    items(labels.size) { i ->
+                        Box(modifier = Modifier.height(54.dp).shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Color(0x05000000)).clip(RoundedCornerShape(16.dp)).background(Color.White).border(1.dp, Color(0xFFF9FAFB), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                            Text(labels[i], fontSize = 14.sp, color = Color(0xFF333333), fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            }
+
+            // More
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Text("更多", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color(0xFF222222), modifier = Modifier.padding(bottom = 16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column(modifier = Modifier.weight(1f).height(120.dp).clip(RoundedCornerShape(24.dp)).background(Color(0xFFF7F8FA)).padding(20.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("🎨", fontSize = 24.sp)
+                            Text("→", color = Color(0xFFD1D5DB), modifier = Modifier.rotate(-45f))
+                        }
+                        Column {
+                            Text("键盘皮肤", color = Color(0xFF222222), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text("更多皮肤随心挑", color = Color(0xFF999999), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f).height(120.dp).clip(RoundedCornerShape(24.dp)).background(Color(0xFFF7F8FA)).clickable { onShowKeyboard() }.padding(20.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("⌨", fontSize = 24.sp)
+                            Text("→", color = Color(0xFFD1D5DB), modifier = Modifier.rotate(-45f))
+                        }
+                        Column {
+                            Text("切换输入法", color = Color(0xFF222222), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text("选择👉Lovekey键盘", color = Color(0xFF999999), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                        }
+                    }
+                }
+                Box(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(120.dp).clip(RoundedCornerShape(24.dp)).background(Color(0xFFF7F8FA)).padding(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("❓", fontSize = 24.sp)
+                        Text("→", color = Color(0xFFD1D5DB), modifier = Modifier.rotate(-45f))
+                    }
+                    Column(modifier = Modifier.align(Alignment.BottomStart)) {
+                        Text("常见问题", color = Color(0xFF222222), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("键盘使用帮助", color = Color(0xFF999999), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         // Floating Buy One Get One Free Widget
-        Box(modifier = Modifier.align(Alignment.CenterEnd).offset(x = 15.dp, y = 100.dp).size(105.dp).shadow(30.dp, RoundedCornerShape(28.dp), spotColor = Color(0x665C73FF)).clip(RoundedCornerShape(28.dp)).background(Brush.linearGradient(listOf(Color(0xFFE8EEFF), Color(0xFFA0B8FF)))).border(3.dp, Color.White, RoundedCornerShape(28.dp))) {
+        val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+        val floatY by infiniteTransition.animateFloat(
+            initialValue = 0f, targetValue = -15f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(2500, easing = androidx.compose.animation.core.EaseInOut), androidx.compose.animation.core.RepeatMode.Reverse), label = "floaty"
+        )
+        Box(modifier = Modifier.align(Alignment.CenterEnd).offset(x = 15.dp, y = 100.dp + floatY.dp).size(105.dp).shadow(30.dp, RoundedCornerShape(28.dp), spotColor = Color(0x665C73FF)).clip(RoundedCornerShape(28.dp)).background(Brush.linearGradient(listOf(Color(0xFFE8EEFF), Color(0xFFA0B8FF)))).border(3.dp, Color.White, RoundedCornerShape(28.dp))) {
             Box(modifier = Modifier.align(Alignment.TopEnd).offset(x = (-8).dp, y = 4.dp).rotate(-6f).clip(CircleShape).background(Color(0xFF5C73FF)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                 Text("新户专享", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
             }

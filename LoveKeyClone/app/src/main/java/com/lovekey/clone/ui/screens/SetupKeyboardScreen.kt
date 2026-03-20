@@ -53,22 +53,68 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
         }
 
         // Header
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 80.dp, start = 32.dp, end = 32.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+                .padding(top = 80.dp, start = 32.dp)
         ) {
             Column {
                 Text("Lovekey", color = Color.White, fontSize = 42.sp, fontWeight = FontWeight.Black, letterSpacing = (-1).sp)
                 Text("一个可以帮你回复消息的键盘", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp, fontWeight = FontWeight.Medium)
             }
-            // 3D Keycap Placeholder
-            Box(modifier = Modifier.size(80.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFF3D50E6)).shadow(20.dp, spotColor = Color(0x4D1E32C8))) {
-                Box(modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFF6B8BFF)))
-                Box(modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(12.dp)).background(Color.White))
-                Text("K", color = Color(0xFF2C334A), fontSize = 40.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.Center))
+            // 3D Keycap Canvas
+            Box(modifier = Modifier.align(Alignment.CenterEnd).offset(x = 30.dp, y = (-10).dp)) {
+                androidx.compose.foundation.Canvas(modifier = Modifier.size(150.dp).shadow(30.dp, spotColor = Color(0x4D1E32C8), shape = RoundedCornerShape(32.dp))) {
+                    val w = size.width
+                    val h = size.height
+
+                    // Outer Dark Blue
+                    drawRoundRect(
+                        color = Color(0xFF3D50E6),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.13f, h * 0.2f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.73f, h * 0.66f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx(), 24.dp.toPx())
+                    )
+                    // Inner Lighter Blue
+                    drawRoundRect(
+                        color = Color(0xFF6B8BFF),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.13f, h * 0.16f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.73f, h * 0.64f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx(), 24.dp.toPx())
+                    )
+                    // Inner Off-White Base
+                    drawRoundRect(
+                        color = Color(0xFFD9E2FF),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.21f, h * 0.24f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.57f, h * 0.5f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx(), 16.dp.toPx())
+                    )
+                    // Inner White Top
+                    drawRoundRect(
+                        color = Color(0xFFF8FAFF),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.21f, h * 0.18f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.57f, h * 0.5f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx(), 16.dp.toPx())
+                    )
+
+                    // The smile
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(w * 0.25f, h * 0.21f)
+                        cubicTo(w * 0.4f, h * 0.18f, w * 0.6f, h * 0.18f, w * 0.74f, h * 0.21f)
+                        cubicTo(w * 0.75f, h * 0.3f, w * 0.75f, h * 0.36f, w * 0.74f, h * 0.43f)
+                        cubicTo(w * 0.6f, h * 0.36f, w * 0.4f, h * 0.36f, w * 0.25f, h * 0.43f)
+                        cubicTo(w * 0.24f, h * 0.36f, w * 0.24f, h * 0.3f, w * 0.25f, h * 0.21f)
+                        close()
+                    }
+                    drawPath(path, Color.White)
+                    drawCircle(color = Color(0xFF2C334A), radius = 3.5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(w * 0.41f, h * 0.41f))
+                    drawCircle(color = Color(0xFF2C334A), radius = 3.5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(w * 0.58f, h * 0.41f))
+                    val smilePath = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(w * 0.44f, h * 0.5f)
+                        quadraticBezierTo(w * 0.5f, h * 0.55f, w * 0.56f, h * 0.5f)
+                    }
+                    drawPath(smilePath, color = Color(0xFF2C334A), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
             }
         }
 

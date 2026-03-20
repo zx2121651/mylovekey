@@ -83,39 +83,45 @@ fun PaywallMainScreen(onNext: () -> Unit, onDownsell: () -> Unit) {
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
+                            .rotate(-12f)
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.3f))
                             .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
                             .padding(horizontal = 8.dp, vertical = 2.dp)
-                            .rotate(-12f)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
 
                     val pulse by rememberInfiniteTransition().animateFloat(
                         initialValue = 0.95f, targetValue = 1.05f,
-                        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
+                        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = "pulse"
                     )
-                    Text("限时", color = Color.White, fontSize = 44.sp, fontWeight = FontWeight.Black, modifier = Modifier.rotate(-6f).scale(pulse))
+                    Text(
+                        "限时",
+                        color = Color.White,
+                        fontSize = 44.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.rotate(-6f).scale(pulse)
+                    )
                 }
 
-                Row(
-                    modifier = Modifier.padding(top = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier.padding(top = 10.dp)
                 ) {
-                    Text("🎠", fontSize = 60.sp, modifier = Modifier.offset(x = 24.dp).rotate(-10f))
+                    Text("🎠", fontSize = 60.sp, modifier = Modifier.align(Alignment.CenterStart).offset(x = (-24).dp).rotate(-10f).shadow(10.dp, CircleShape, spotColor = Color(0x33000000)))
                     Box(
                         modifier = Modifier
                             .rotate(3f)
+                            .shadow(16.dp, RoundedCornerShape(32.dp), spotColor = Color(0x33000000))
                             .clip(RoundedCornerShape(32.dp))
                             .background(Color.White)
                             .border(4.dp, Color(0xFFE02020), RoundedCornerShape(32.dp))
                             .padding(horizontal = 24.dp, vertical = 8.dp)
-                            .shadow(16.dp)
                     ) {
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text("立减", color = Color(0xFFE02020), fontSize = 40.sp, fontWeight = FontWeight.Black)
-                            Text("90", color = Color(0xFFE02020), fontSize = 58.sp, fontWeight = FontWeight.Black, modifier = Modifier.offset(y = 4.dp))
-                            Text("元", color = Color(0xFFE02020), fontSize = 24.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(bottom = 4.dp))
+                            Text("立减", color = Color(0xFFE02020), fontSize = 40.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontWeight = FontWeight.Black)
+                            Text("90", color = Color(0xFFE02020), fontSize = 58.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.offset(y = 4.dp))
+                            Text("元", color = Color(0xFFE02020), fontSize = 24.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.padding(bottom = 4.dp))
                         }
                     }
                 }
@@ -168,16 +174,28 @@ fun PaywallMainScreen(onNext: () -> Unit, onDownsell: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .shadow(if (selectedPlan == "lifetime") 20.dp else 0.dp, RoundedCornerShape(24.dp), spotColor = Color(0x33FF3B30))
                         .clip(RoundedCornerShape(24.dp))
                         .background(if (selectedPlan == "lifetime") Color.White else Color.White.copy(alpha = 0.6f))
                         .border(2.dp, if (selectedPlan == "lifetime") Color(0xFFFF3B30) else Color.Transparent, RoundedCornerShape(24.dp))
                         .clickable { selectedPlan = "lifetime" }
-                        .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 32.dp)
-                        .shadow(if (selectedPlan == "lifetime") 20.dp else 0.dp, spotColor = Color(0x33FF3B30))
                 ) {
+                    Column(
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 32.dp)
+                    ) {
+                        Text("永久会员", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.padding(top = 8.dp))
+                        Text("一次购买，终身免费", fontSize = 11.sp, color = Color(0xFF888888), fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 2.dp))
+
+                        Row(modifier = Modifier.padding(top = 16.dp), verticalAlignment = Alignment.Bottom) {
+                            Text("￥", color = Color(0xFFFF3B30), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text("128", color = Color(0xFFFF3B30), fontSize = 36.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
+                        }
+                        Text("低至 ￥1/月", color = Color(0xFFD0A678), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                    }
+
                     Box(
                         modifier = Modifier
-                            .offset(x = (-16).dp, y = (-24).dp)
+                            .align(Alignment.TopStart)
                             .clip(RoundedCornerShape(topStart = 20.dp, bottomEnd = 12.dp))
                             .background(Color(0xFFFF3B30))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -185,25 +203,14 @@ fun PaywallMainScreen(onNext: () -> Unit, onDownsell: () -> Unit) {
                         Text("活动倒计时 ${formatTime(timeLeft)}", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Column {
-                        Text("永久会员", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.padding(top = 8.dp))
-                        Text("一次购买，终身免费", fontSize = 11.sp, color = Color(0xFF888888), fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 2.dp))
-
-                        Row(modifier = Modifier.padding(top = 16.dp), verticalAlignment = Alignment.Bottom) {
-                            Text("￥", color = Color(0xFFFF3B30), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                            Text("128", color = Color(0xFFFF3B30), fontSize = 36.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text("低至 ￥1/月", color = Color(0xFFD0A678), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-                    }
-
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .offset(y = 44.dp)
+                            .offset(y = 12.dp)
+                            .shadow(4.dp, CircleShape, spotColor = Color(0x33FF3B30))
                             .clip(CircleShape)
                             .background(Color(0xFFFF3B30))
                             .padding(horizontal = 16.dp, vertical = 6.dp)
-                            .shadow(4.dp)
                     ) {
                         Text("立减 ￥90", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
@@ -214,18 +221,18 @@ fun PaywallMainScreen(onNext: () -> Unit, onDownsell: () -> Unit) {
                     modifier = Modifier
                         .weight(0.8f)
                         .height(160.dp)
+                        .shadow(if (selectedPlan == "monthly") 20.dp else 0.dp, RoundedCornerShape(24.dp), spotColor = Color(0x33FF3B30))
                         .clip(RoundedCornerShape(24.dp))
                         .background(if (selectedPlan == "monthly") Color.White else Color.White.copy(alpha = 0.6f))
                         .border(2.dp, if (selectedPlan == "monthly") Color(0xFFFF3B30) else Color.White.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
                         .clickable { selectedPlan = "monthly" }
                         .padding(16.dp)
-                        .shadow(if (selectedPlan == "monthly") 20.dp else 0.dp, spotColor = Color(0x33FF3B30))
                 ) {
                     Text("月度会员", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
                     Spacer(modifier = Modifier.weight(1f))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text("￥", color = Color(0xFF1A1A1A), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        Text("48", color = Color(0xFF1A1A1A), fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Text("48", color = Color(0xFF1A1A1A), fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
                     }
                 }
             }
@@ -266,10 +273,10 @@ fun PaywallMainScreen(onNext: () -> Unit, onDownsell: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp)
+                        .shadow(20.dp, CircleShape, spotColor = Color(0x4DD62020))
                         .clip(CircleShape)
                         .background(Color(0xFFD62020))
-                        .clickable { onNext() }
-                        .shadow(20.dp, spotColor = Color(0x4DD62020)),
+                        .clickable { onNext() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("立即解锁", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)

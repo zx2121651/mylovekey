@@ -83,7 +83,15 @@ fun DownsellModal(onClose: () -> Unit, onNext: () -> Unit) {
                     .padding(top = 64.dp, start = 24.dp, end = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("限时", color = Color(0xFFB4C5FF), fontSize = 32.sp, fontWeight = FontWeight.Black)
+                Text(
+                    "限时",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    style = androidx.compose.ui.text.TextStyle(
+                        brush = Brush.horizontalGradient(listOf(Color(0xFFB4C5FF), Color(0xFFE8EEFF)))
+                    )
+                )
                 Text("买一月送一月", color = Color.White, fontSize = 46.sp, fontWeight = FontWeight.Black, letterSpacing = (-1).sp, modifier = Modifier.padding(bottom = 16.dp))
                 Text("解锁键盘全部功能不限次", color = Color.White.copy(alpha = 0.8f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
 
@@ -99,7 +107,7 @@ fun DownsellModal(onClose: () -> Unit, onNext: () -> Unit) {
                             .border(1.dp, Color.White.copy(alpha = 0.05f), CircleShape)
                             .padding(horizontal = 24.dp, vertical = 8.dp)
                     ) {
-                        Text(formatTime(timeLeft), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                        Text(formatTime(timeLeft), color = Color.White, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     }
                 }
 
@@ -107,11 +115,11 @@ fun DownsellModal(onClose: () -> Unit, onNext: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 40.dp)
+                        .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = Color(0x33000000))
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color(0xFF1D1D28))
                         .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
                         .padding(20.dp)
-                        .shadow(16.dp)
                 ) {
                     Column {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
@@ -125,10 +133,10 @@ fun DownsellModal(onClose: () -> Unit, onNext: () -> Unit) {
                         Row(modifier = Modifier.fillMaxWidth().padding(top = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
                             Text("￥96", color = Color(0xFF555555), fontSize = 16.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.LineThrough)
                             Row(verticalAlignment = Alignment.Bottom) {
-                                Text("优惠后 ", color = Color(0xFFFF7A92), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                Text("￥", color = Color(0xFFFF7A92), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                Text("优惠后 ", color = Color(0xFFFF7A92), fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                                Text("￥", color = Color(0xFFFF7A92), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 2.dp))
                                 Text("24", color = Color(0xFFFF7A92), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-                                Text("/月", color = Color(0xFFFF7A92), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text("/月", color = Color(0xFFFF7A92), fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
                             }
                         }
                     }
@@ -145,10 +153,10 @@ fun DownsellModal(onClose: () -> Unit, onNext: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp)
+                        .shadow(20.dp, CircleShape, spotColor = Color(0x666E7BFF))
                         .clip(CircleShape)
                         .background(Brush.horizontalGradient(listOf(Color(0xFF6E7BFF), Color(0xFF8C64FF))))
-                        .clickable { onNext() }
-                        .shadow(20.dp, spotColor = Color(0x666E7BFF)),
+                        .clickable { onNext() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("领取优惠", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)

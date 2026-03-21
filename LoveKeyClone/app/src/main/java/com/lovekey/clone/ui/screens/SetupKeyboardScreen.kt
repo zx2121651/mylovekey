@@ -2,6 +2,7 @@ package com.lovekey.clone.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -44,30 +45,76 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
     ) {
         // Background large texts
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 80.dp),
+            modifier = Modifier.fillMaxSize().padding(top = 8.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("KNOW", color = Color.White.copy(alpha = 0.06f), fontSize = 140.sp, fontWeight = FontWeight.Black, modifier = Modifier.offset(x = (-24).dp).rotate(-12f))
-            Text("KNOW", color = Color.White.copy(alpha = 0.06f), fontSize = 140.sp, fontWeight = FontWeight.Black, modifier = Modifier.offset(x = (-24).dp).rotate(-12f))
+            Text("KNOW", color = Color.White.copy(alpha = 0.06f), fontSize = 140.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.offset(x = (-24).dp).rotate(-12f))
+            Text("KNOW", color = Color.White.copy(alpha = 0.06f), fontSize = 140.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.offset(x = (-24).dp).rotate(-12f).padding(bottom = 32.dp))
         }
 
         // Header
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 80.dp, start = 32.dp, end = 32.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+                .padding(top = 80.dp, start = 32.dp)
         ) {
             Column {
                 Text("Lovekey", color = Color.White, fontSize = 42.sp, fontWeight = FontWeight.Black, letterSpacing = (-1).sp)
                 Text("一个可以帮你回复消息的键盘", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp, fontWeight = FontWeight.Medium)
             }
-            // 3D Keycap Placeholder
-            Box(modifier = Modifier.size(80.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFF3D50E6)).shadow(20.dp, spotColor = Color(0x4D1E32C8))) {
-                Box(modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xFF6B8BFF)))
-                Box(modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(12.dp)).background(Color.White))
-                Text("K", color = Color(0xFF2C334A), fontSize = 40.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.Center))
+            // 3D Keycap Canvas
+            Box(modifier = Modifier.align(Alignment.CenterEnd).offset(x = 30.dp, y = (-10).dp)) {
+                androidx.compose.foundation.Canvas(modifier = Modifier.size(150.dp).shadow(30.dp, spotColor = Color(0x4D1E32C8), shape = RoundedCornerShape(32.dp))) {
+                    val w = size.width
+                    val h = size.height
+
+                    // Outer Dark Blue
+                    drawRoundRect(
+                        color = Color(0xFF3D50E6),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.13f, h * 0.2f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.73f, h * 0.66f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx(), 24.dp.toPx())
+                    )
+                    // Inner Lighter Blue
+                    drawRoundRect(
+                        color = Color(0xFF6B8BFF),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.13f, h * 0.16f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.73f, h * 0.64f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx(), 24.dp.toPx())
+                    )
+                    // Inner Off-White Base
+                    drawRoundRect(
+                        color = Color(0xFFD9E2FF),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.21f, h * 0.24f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.57f, h * 0.5f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx(), 16.dp.toPx())
+                    )
+                    // Inner White Top
+                    drawRoundRect(
+                        color = Color(0xFFF8FAFF),
+                        topLeft = androidx.compose.ui.geometry.Offset(w * 0.21f, h * 0.18f),
+                        size = androidx.compose.ui.geometry.Size(w * 0.57f, h * 0.5f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx(), 16.dp.toPx())
+                    )
+
+                    // The smile
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(w * 0.25f, h * 0.21f)
+                        cubicTo(w * 0.4f, h * 0.18f, w * 0.6f, h * 0.18f, w * 0.74f, h * 0.21f)
+                        cubicTo(w * 0.75f, h * 0.3f, w * 0.75f, h * 0.36f, w * 0.74f, h * 0.43f)
+                        cubicTo(w * 0.6f, h * 0.36f, w * 0.4f, h * 0.36f, w * 0.25f, h * 0.43f)
+                        cubicTo(w * 0.24f, h * 0.36f, w * 0.24f, h * 0.3f, w * 0.25f, h * 0.21f)
+                        close()
+                    }
+                    drawPath(path, Color.White)
+                    drawCircle(color = Color(0xFF2C334A), radius = 3.5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(w * 0.41f, h * 0.41f))
+                    drawCircle(color = Color(0xFF2C334A), radius = 3.5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(w * 0.58f, h * 0.41f))
+                    val smilePath = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(w * 0.44f, h * 0.5f)
+                        quadraticBezierTo(w * 0.5f, h * 0.55f, w * 0.56f, h * 0.5f)
+                    }
+                    drawPath(smilePath, color = Color(0xFF2C334A), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
             }
         }
 
@@ -81,10 +128,10 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = Color(0x33000000))
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color.White)
                         .padding(16.dp)
-                        .shadow(16.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(modifier = Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF7F8FA)).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -95,7 +142,7 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
                             Text("未启用", color = Color(0xFFA0A5B5), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(CircleShape).background(Color(0xFFE6E8EC)).padding(horizontal = 12.dp, vertical = 4.dp))
                         }
 
-                        Row(modifier = Modifier.fillMaxWidth().height(60.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.5.dp, Color(0xFFEBF0F5), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        Row(modifier = Modifier.fillMaxWidth().height(60.dp).shadow(2.dp, RoundedCornerShape(12.dp), spotColor = Color(0x1A000000)).clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.5.dp, Color(0xFFEBF0F5), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF4B66FF)))
                                 Text("Lovekey", color = Color(0xFF1A1A1A), fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -113,19 +160,29 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
                     }
 
                     Box(modifier = Modifier.fillMaxSize()) {
+                        val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+                        val hintOffset by infiniteTransition.animateFloat(
+                            initialValue = 0f, targetValue = -10f,
+                            animationSpec = androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(750, easing = androidx.compose.animation.core.EaseInOut), androidx.compose.animation.core.RepeatMode.Reverse)
+                        )
+                        val hintScale by infiniteTransition.animateFloat(
+                            initialValue = 1f, targetValue = 0.9f,
+                            animationSpec = androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(750, easing = androidx.compose.animation.core.EaseInOut), androidx.compose.animation.core.RepeatMode.Reverse)
+                        )
+
                         Text("开启Lovekey", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.Center).offset(y = 20.dp).rotate(-2f))
-                        Text("👆", fontSize = 34.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = (-10).dp, y = (-20).dp))
+                        Text("👆", fontSize = 34.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = hintOffset.dp, y = hintOffset.dp).scale(hintScale))
                     }
                 }
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = Color(0x33000000))
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color(0xFFE3E4E8))
                         .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
                         .padding(16.dp)
-                        .shadow(16.dp)
                 ) {
                     Column {
                         Row(modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, bottom = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -142,8 +199,17 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
                         }
                     }
                     Box(modifier = Modifier.fillMaxSize()) {
+                        val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+                        val hintOffset by infiniteTransition.animateFloat(
+                            initialValue = 0f, targetValue = -10f,
+                            animationSpec = androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(750, easing = androidx.compose.animation.core.EaseInOut), androidx.compose.animation.core.RepeatMode.Reverse)
+                        )
+                        val hintScale by infiniteTransition.animateFloat(
+                            initialValue = 1f, targetValue = 0.9f,
+                            animationSpec = androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(750, easing = androidx.compose.animation.core.EaseInOut), androidx.compose.animation.core.RepeatMode.Reverse)
+                        )
                         Text("选择Lovekey键盘", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Black, modifier = Modifier.align(Alignment.Center).offset(y = 10.dp).rotate(-2f))
-                        Text("👆", fontSize = 34.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = (-10).dp, y = (-20).dp))
+                        Text("👆", fontSize = 34.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = hintOffset.dp, y = hintOffset.dp).scale(hintScale))
                     }
                 }
             }
@@ -169,6 +235,7 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
+                    .shadow(if (setupStep == 1) 20.dp else 0.dp, RoundedCornerShape(14.dp), spotColor = Color(0x33000000))
                     .clip(RoundedCornerShape(14.dp))
                     .background(if (setupStep == 1) Color(0xFF121212) else Color.White.copy(alpha = 0.1f))
                     .clickable(enabled = setupStep == 1) { handleStep1Click() }
@@ -184,6 +251,7 @@ fun SetupKeyboardScreen(onNext: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
+                    .shadow(if (setupStep == 2) 20.dp else 0.dp, RoundedCornerShape(14.dp), spotColor = Color(0x33000000))
                     .clip(RoundedCornerShape(14.dp))
                     .background(if (setupStep == 2) Color(0xFF121212) else Color.White.copy(alpha = 0.1f))
                     .clickable(enabled = setupStep == 2) { showBottomSheet = true }

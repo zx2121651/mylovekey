@@ -85,28 +85,28 @@ fun KeyboardPersonaItem(persona: Persona, onDelete: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = Color(0x08000000))
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
             .border(1.dp, Color(0xFFF3F4F6), RoundedCornerShape(20.dp))
-            .padding(16.dp)
-            .shadow(4.dp, spotColor = Color(0x05000000)),
+            .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("≡", fontSize = 24.sp, color = Color(0xFFDCDFE6))
         Spacer(modifier = Modifier.width(16.dp))
         Text(persona.icon, fontSize = 24.sp)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(persona.text, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.weight(1f))
+        Text(persona.text, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A), modifier = Modifier.weight(1f))
 
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFF0F0))
+                .background(Color(0xFFFFEBEE))
                 .clickable { onDelete() },
             contentAlignment = Alignment.Center
         ) {
-            Text("-", color = Color(0xFFFF4B4B), fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.offset(y = (-1).dp))
+            Text("-", color = Color(0xFFFF4B6B), fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.offset(y = (-2).dp))
         }
     }
 }

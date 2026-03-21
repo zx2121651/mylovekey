@@ -29,21 +29,20 @@ fun <T> WheelPicker(
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val itemHeight = 56.dp
 
-    // Sync initial value
-    LaunchedEffect(items) {
+    // Sync external value changes to scroll position
+    LaunchedEffect(value) {
         val index = items.indexOf(value)
-        if (index != -1) {
-            listState.scrollToItem(index)
+        if (index != -1 && listState.firstVisibleItemIndex != index && !listState.isScrollInProgress) {
+            listState.animateScrollToItem(index)
         }
     }
 
-    // React to scroll changes
+    // React to scroll changes and update selected value
     LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex }
-            .map { it }
+        snapshotFlow { listState.firstVisibleItemIndex to listState.isScrollInProgress }
             .distinctUntilChanged()
-            .collect { index ->
-                if (index in items.indices) {
+            .collect { (index, isScrolling) ->
+                if (index in items.indices && !isScrolling) {
                     onChange(items[index])
                 }
             }
@@ -64,8 +63,8 @@ fun <T> WheelPicker(
                     item.toString()
                 }
 
-                // Simple derived state for selection based on scroll position
-                val isSelected = remember { derivedStateOf { listState.firstVisibleItemIndex == index } }
+                // The selection is strictly based on the current value being passed
+                val isSelected = item == value
 
                 Box(
                     modifier = Modifier
@@ -75,9 +74,9 @@ fun <T> WheelPicker(
                 ) {
                     Text(
                         text = "$displayValue$unit",
-                        color = if (isSelected.value) Color(0xFF1A1A1A) else Color(0xFFC0C4D0),
+                        color = if (isSelected) Color(0xFF1A1A1A) else Color(0xFFC0C4D0),
                         fontWeight = FontWeight.Bold,
-                        fontSize = if (isSelected.value) 20.sp else 16.sp
+                        fontSize = if (isSelected) 20.sp else 16.sp
                     )
                 }
             }

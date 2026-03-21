@@ -28,6 +28,35 @@ import kotlinx.coroutines.launch
 
 data class ChatMessage(val id: Long, val type: String, val text: String)
 
+
+@Composable
+fun BrushStrokeBg(content: @Composable () -> Unit) {
+    Box(contentAlignment = Alignment.Center) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
+            val w = size.width
+            val h = size.height
+            val path1 = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.05f, h * 0.5f)
+                quadraticBezierTo(w * 0.2f, h * 0.25f, w * 0.5f, h * 0.33f)
+                quadraticBezierTo(w * 0.95f, h * 0.41f, w * 0.6f, h * 0.66f)
+                quadraticBezierTo(w * 0.075f, h * 0.75f, w * 0.05f, h * 0.5f)
+                close()
+            }
+            drawPath(path1, color = Color(0xFF3B5BFF).copy(alpha=0.95f))
+
+            val path2 = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.025f, h * 0.41f)
+                quadraticBezierTo(w * 0.25f, h * 0.08f, w * 0.75f, h * 0.25f)
+                quadraticBezierTo(w * 0.975f, h * 0.58f, w * 0.85f, h * 0.91f)
+                quadraticBezierTo(w * 0.4f, h * 0.83f, w * 0.025f, h * 0.58f)
+                close()
+            }
+            drawPath(path2, color = Color(0xFF4B6BFF).copy(alpha=0.8f))
+        }
+        content()
+    }
+}
+
 @Composable
 fun ChatKeyboardScreen(isTutorial: Boolean, onComplete: () -> Unit) {
     var tutPhase by remember { mutableStateOf(if (isTutorial) 0 else 5) }
@@ -347,7 +376,16 @@ fun ChatKeyboardScreen(isTutorial: Boolean, onComplete: () -> Unit) {
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Box(modifier = Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFEAECEF)), contentAlignment = Alignment.Center) { Text("情绪价值", color = Color(0xFF555555), fontSize = 13.sp) }
-                        Box(modifier = Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(if (tutPhase == 1) Color.White else Color(0xFFEAECEF)).border(if (tutPhase == 1) 2.dp else 0.dp, if (tutPhase == 1) Color(0xFF3B5BFF) else Color.Transparent, RoundedCornerShape(12.dp)).clickable { if (tutPhase == 1) handleNextPhase() }, contentAlignment = Alignment.Center) { Text("😊 幽默", color = Color(0xFF555555), fontSize = 13.sp, fontWeight = if (tutPhase==1) FontWeight.Bold else FontWeight.Normal) }
+                        Box(modifier = Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(if (tutPhase == 1) Color.White else Color(0xFFEAECEF)).border(if (tutPhase == 1) 2.dp else 0.dp, if (tutPhase == 1) Color(0xFF3B5BFF) else Color.Transparent, RoundedCornerShape(12.dp)).clickable { if (tutPhase == 1) handleNextPhase() }, contentAlignment = Alignment.Center) {
+                            Text("😊 幽默", color = Color(0xFF555555), fontSize = 13.sp, fontWeight = if (tutPhase==1) FontWeight.Bold else FontWeight.Normal)
+                            if (tutPhase == 1) {
+                                Box(modifier = Modifier.offset(x = 100.dp, y = (-50).dp)) {
+                                    BrushStrokeBg {
+                                        Text("试试幽默的回复吧", color = Color.White, fontSize = 20.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
+                                    }
+                                }
+                            }
+                        }
                         Box(modifier = Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFEAECEF)), contentAlignment = Alignment.Center) { Text("⌫", color = Color(0xFF555555), fontSize = 18.sp) }
                         Box(modifier = Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFEAECEF)), contentAlignment = Alignment.Center) { Text("🌞 暖男", color = Color(0xFF555555), fontSize = 13.sp) }
                     }

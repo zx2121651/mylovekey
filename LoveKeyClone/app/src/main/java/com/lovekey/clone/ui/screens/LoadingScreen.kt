@@ -1,6 +1,7 @@
 package com.lovekey.clone.ui.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -84,9 +86,19 @@ fun LoadingScreen(onNext: () -> Unit) {
                 }
 
                 if (showCheck) {
-                    val popScale by animateFloatAsState(targetValue = 1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow))
+                    var popScale by remember { mutableFloatStateOf(0f) }
+                    LaunchedEffect(Unit) {
+                        androidx.compose.animation.core.animate(
+                            initialValue = 0f,
+                            targetValue = 1f,
+                            animationSpec = tween(500, easing = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f))
+                        ) { value, _ ->
+                            popScale = value
+                        }
+                    }
                     Box(modifier = Modifier.padding(bottom = 110.dp).scale(popScale)) {
                         CheckCircle3D()
+                        FireworkBurst()
                     }
                 }
             }
@@ -138,24 +150,43 @@ fun StarFlicker(delayMillis: Int, size: Int, offsetX: Int, offsetY: Int) {
 @Composable
 fun FlyTag(icon: String, text: String, delayMillis: Int, startX: Float, rot: Float) {
     var isStarted by remember { mutableStateOf(false) }
+    var animationState by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(Unit) {
         delay(delayMillis.toLong())
         isStarted = true
+        androidx.compose.animation.core.animate(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = tween(1200, easing = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f))
+        ) { value, _ ->
+            animationState = value
+        }
     }
 
-    if (isStarted) {
-        val yAnim by animateFloatAsState(targetValue = 0f, animationSpec = tween(1200, easing = LinearEasing))
-        val alpha by animateFloatAsState(targetValue = 0f, animationSpec = tween(1200, easing = LinearEasing))
+    if (isStarted && animationState < 1f) {
+        val xOffset = startX * (1f - animationState)
+        val yOffset = -240f + (240f * animationState) + (if(animationState > 0.8f) 30f * (animationState - 0.8f)/0.2f else 0f)
+        val currentScale = when {
+            animationState < 0.2f -> 0.5f + (0.55f * (animationState / 0.2f))
+            animationState < 0.6f -> 1.05f - (0.1f * ((animationState - 0.2f) / 0.4f))
+            animationState < 0.8f -> 0.95f - (0.15f * ((animationState - 0.6f) / 0.2f))
+            else -> 0.8f - (0.8f * ((animationState - 0.8f) / 0.2f))
+        }
+        val currentRot = (rot * 2f) * (1f - animationState)
+        val alpha = when {
+            animationState < 0.2f -> animationState / 0.2f
+            animationState < 0.8f -> 1f
+            else -> 1f - ((animationState - 0.8f) / 0.2f)
+        }
 
-        // Basic simplified fly in animation
         Row(
             modifier = Modifier
                 .padding(bottom = 40.dp)
-                .offset(x = startX.dp, y = yAnim.dp)
-                .rotate(rot * 2f)
-                .scale(0.8f)
-                .alpha(if (yAnim == 0f) 0f else 1f)
+                .offset(x = xOffset.dp, y = yOffset.dp)
+                .rotate(currentRot)
+                .scale(currentScale)
+                .alpha(alpha)
                 .clip(CircleShape)
                 .background(Color.White.copy(alpha = 0.6f))
                 .border(1.dp, Color.White.copy(alpha = 0.7f), CircleShape)
@@ -190,6 +221,58 @@ fun Keyboard3D() {
         }
         Row(modifier = Modifier.padding(top = 56.dp, start = 32.dp, end = 32.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Box(modifier = Modifier.size(56.dp, 12.dp).clip(RoundedCornerShape(4.dp)).background(Color.White))
+        }
+    }
+}
+
+
+@Composable
+fun FireworkBurst() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        ParticleBurst(delayOffset = 0)
+        Box(modifier = Modifier.offset(x = (-100).dp, y = (-80).dp).scale(0.7f)) { ParticleBurst(delayOffset = 200) }
+        Box(modifier = Modifier.offset(x = 110.dp, y = (-50).dp).scale(0.8f)) { ParticleBurst(delayOffset = 400) }
+        Box(modifier = Modifier.offset(x = (-30).dp, y = 100.dp).scale(0.6f)) { ParticleBurst(delayOffset = 500) }
+        Box(modifier = Modifier.offset(x = 80.dp, y = 90.dp).scale(0.7f)) { ParticleBurst(delayOffset = 700) }
+    }
+}
+
+@Composable
+fun ParticleBurst(delayOffset: Int) {
+    val colors = listOf(Color(0xFFFF4B6B), Color(0xFFFFD233), Color(0xFF5C73FF), Color(0xFF4ECDC4), Color(0xFFA855F7), Color(0xFFFF923D), Color.White, Color(0xFF00E676))
+    val dots = remember { List(40) {
+        val angle = Math.random() * Math.PI * 2
+        val distance = 80 + Math.random() * 160
+        Triple(Math.cos(angle) * distance, Math.sin(angle) * distance, colors.random())
+    } }
+
+    var animProgress by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        delay(delayOffset.toLong())
+        androidx.compose.animation.core.animate(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = tween(1000, easing = CubicBezierEasing(0.25f, 1f, 0.3f, 1f))
+        ) { value, _ ->
+            animProgress = value
+        }
+    }
+
+    if (animProgress > 0f && animProgress < 1f) {
+        dots.forEach { (tx, ty, color) ->
+            val pX = tx * animProgress
+            val pY = ty * animProgress + (40 * animProgress * animProgress)
+            val pScale = if (animProgress < 0.4f) animProgress / 0.4f else 1f - ((animProgress - 0.4f) / 0.6f)
+            Box(
+                modifier = Modifier
+                    .offset(x = pX.dp, y = pY.dp)
+                    .size(6.dp)
+                    .scale(pScale.toFloat())
+                    .clip(CircleShape)
+                    .background(color)
+                    .shadow(8.dp, spotColor = color)
+            )
         }
     }
 }

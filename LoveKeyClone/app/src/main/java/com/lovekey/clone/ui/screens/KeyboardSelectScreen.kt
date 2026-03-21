@@ -101,10 +101,10 @@ fun KeyboardSelectScreen(onNext: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp)
+                    .shadow(if (isEnabled) 20.dp else 0.dp, RoundedCornerShape(24.dp), spotColor = Color(0x33000000))
                     .clip(RoundedCornerShape(24.dp))
-                    .background(if (isEnabled) Color(0xFF121212) else Color(0xFF4B4B4B))
-                    .clickable(enabled = isEnabled) { onNext() }
-                    .shadow(if (isEnabled) 20.dp else 0.dp, spotColor = Color(0x33000000)),
+                    .background(if (isEnabled) Color(0xFF121212) else Color(0xFF4B4B4B).copy(alpha = 0.9f))
+                    .clickable(enabled = isEnabled) { onNext() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -128,12 +128,13 @@ fun KeyboardTypeCard(
     onClick: (String) -> Unit,
     content: @Composable () -> Unit
 ) {
-    val scale by animateFloatAsState(if (isSelected) 0.98f else 1f)
+    val scale by animateFloatAsState(targetValue = if (isSelected) 0.98f else 1f, label = "cardScale")
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
+            .shadow(if (isSelected) 20.dp else 16.dp, RoundedCornerShape(20.dp), spotColor = if (isSelected) Color(0x265C73FF) else Color(0x0A000000))
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
             .border(
@@ -143,7 +144,6 @@ fun KeyboardTypeCard(
             )
             .clickable { onClick(type) }
             .padding(18.dp)
-            .shadow(if (isSelected) 20.dp else 16.dp, spotColor = if (isSelected) Color(0x265C73FF) else Color(0x0A000000))
     ) {
         Column {
             Row(
@@ -284,7 +284,9 @@ fun HandwritingPreview() {
                 }
             }
             Row(modifier = Modifier.fillMaxWidth().height(34.dp).padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                listOf("符号", "123", "ABC").forEach { Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD3D8E6)), contentAlignment = Alignment.Center) { Text(it, fontSize = 11.sp, color = Color(0xFF333333)) } }
+                Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD3D8E6)), contentAlignment = Alignment.Center) { Text("符号", fontSize = 11.sp, color = Color(0xFF333333)) }
+                Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD3D8E6)), contentAlignment = Alignment.Center) { Text("123", fontSize = 11.sp, color = Color(0xFF333333)) }
+                Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD3D8E6)), contentAlignment = Alignment.Center) { Text("ABC", fontSize = 11.sp, color = Color(0xFF333333)) }
                 Box(modifier = Modifier.weight(2f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color.White))
                 Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD3D8E6)), contentAlignment = Alignment.Center) { Text("写", fontSize = 11.sp, color = Color(0xFF333333)) }
                 Box(modifier = Modifier.weight(1.5f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Color(0xFF5C73FF)), contentAlignment = Alignment.Center) { Text("发送", fontSize = 12.sp, color = Color.White) }

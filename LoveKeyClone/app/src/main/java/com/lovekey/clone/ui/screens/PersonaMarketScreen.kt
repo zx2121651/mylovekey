@@ -333,7 +333,7 @@ fun PersonaMarketScreen(onShowKeyboard: () -> Unit) {
                         ) {
                             // Avatar
                             Box(modifier = Modifier.size(84.dp, 64.dp), contentAlignment = Alignment.CenterStart) {
-                                Box(modifier = Modifier.size(64.dp).align(Alignment.CenterEnd).clip(CircleShape).border(2.dp, Color.White, CircleShape).background(Color(0xFFF4F5FB)).shadow(4.dp, CircleShape, clip = false)) {
+                                Box(modifier = Modifier.size(64.dp).align(Alignment.CenterEnd).shadow(4.dp, CircleShape).clip(CircleShape).border(2.dp, Color.White, CircleShape).background(Color(0xFFF4F5FB))) {
                                     Text("👤", fontSize = 32.sp, modifier = Modifier.align(Alignment.Center))
                                 }
                                 if (p.rank != null) {

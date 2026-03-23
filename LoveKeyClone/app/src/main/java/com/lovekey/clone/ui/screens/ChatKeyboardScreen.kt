@@ -178,7 +178,7 @@ fun ChatKeyboardScreen(isTutorial: Boolean, onComplete: () -> Unit) {
                         Row(verticalAlignment = Alignment.Top) {
                             Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE5E9FF)).border(1.dp, Color(0xFFD0D9FF), CircleShape), contentAlignment = Alignment.Center) { Text("😊", fontSize = 20.sp) }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Box(modifier = Modifier.widthIn(max = 240.dp).clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color.White).padding(14.dp).shadow(2.dp, spotColor = Color(0x0A000000))) {
+                            Box(modifier = Modifier.widthIn(max = 240.dp).shadow(2.dp, RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp), spotColor = Color(0x0A000000)).clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color.White).padding(14.dp)) {
                                 Text("👋 欢迎使用「Lovekey键盘」\n点击任一对话去粘贴，选择任意回复方式去试用吧~", color = Color(0xFF333333), fontSize = 14.sp, lineHeight = 20.sp)
                             }
                         }
@@ -220,7 +220,7 @@ fun ChatKeyboardScreen(isTutorial: Boolean, onComplete: () -> Unit) {
                     if (tutPhase >= 3) {
                         item {
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                                Box(modifier = Modifier.widthIn(max = 240.dp).clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color(0xFF5C73FF)).padding(14.dp).shadow(2.dp, spotColor = Color(0x1A000000))) {
+                                Box(modifier = Modifier.widthIn(max = 240.dp).shadow(2.dp, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp), spotColor = Color(0x1A000000)).clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color(0xFF5C73FF)).padding(14.dp)) {
                                     Text("如果我说我在等你的回复呢", color = Color.White, fontSize = 15.sp)
                                 }
                             }
@@ -229,7 +229,7 @@ fun ChatKeyboardScreen(isTutorial: Boolean, onComplete: () -> Unit) {
                             Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(top = 16.dp)) {
                                 Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE5E9FF)).border(1.dp, Color(0xFFD0D9FF), CircleShape), contentAlignment = Alignment.Center) { Text("😊", fontSize = 20.sp) }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Box(modifier = Modifier.widthIn(max = 240.dp).clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color.White).padding(14.dp).shadow(2.dp, spotColor = Color(0x0A000000))) {
+                                Box(modifier = Modifier.widthIn(max = 240.dp).shadow(2.dp, RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp), spotColor = Color(0x0A000000)).clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color.White).padding(14.dp)) {
                                     Text("🎉如您遇到其他问题，可点击在线客服，帮您解决", color = Color(0xFF333333), fontSize = 14.sp, lineHeight = 20.sp)
                                 }
                             }
@@ -242,14 +242,14 @@ fun ChatKeyboardScreen(isTutorial: Boolean, onComplete: () -> Unit) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE5E9FF)).border(1.dp, Color(0xFFD0D9FF), CircleShape), contentAlignment = Alignment.Center) { Text("😊", fontSize = 20.sp) }
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Box(modifier = Modifier.widthIn(max = 240.dp).clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color.White).padding(14.dp).shadow(2.dp, spotColor = Color(0x0A000000))) {
+                                    Box(modifier = Modifier.widthIn(max = 240.dp).shadow(2.dp, RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp), spotColor = Color(0x0A000000)).clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color.White).padding(14.dp)) {
                                         Text(msg.text, color = Color(0xFF333333), fontSize = 14.sp, lineHeight = 20.sp)
                                     }
                                 }
                             }
                             "me" -> {
                                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                                    Box(modifier = Modifier.widthIn(max = 240.dp).clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color(0xFF5C73FF)).padding(14.dp).shadow(2.dp, spotColor = Color(0x1A000000))) {
+                                    Box(modifier = Modifier.widthIn(max = 240.dp).shadow(2.dp, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp), spotColor = Color(0x1A000000)).clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)).background(Color(0xFF5C73FF)).padding(14.dp)) {
                                         Text(msg.text, color = Color.White, fontSize = 15.sp)
                                     }
                                 }

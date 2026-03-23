@@ -120,7 +120,7 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
                         Text("立减 90", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White).border(1.dp, Color(0xFFF3F4F6), CircleShape).clickable { onShowLogin() }.shadow(2.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.size(36.dp).shadow(2.dp, CircleShape).clip(CircleShape).background(Color.White).border(1.dp, Color(0xFFF3F4F6), CircleShape).clickable { onShowLogin() }, contentAlignment = Alignment.Center) {
                         Text("👤", fontSize = 18.sp)
                     }
                 }
@@ -143,7 +143,7 @@ fun AppHomeScreen(onShowLogin: () -> Unit, onShowKeyboard: () -> Unit) {
                     Text("❤", fontSize = 140.sp, color = Color(0xFFFF4B6B))
                 }
 
-                Box(modifier = Modifier.fillMaxWidth(0.85f).height(58.dp).clip(CircleShape).background(Color(0xFF5C73FF)).shadow(20.dp, spotColor = Color(0x405C73FF)), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxWidth(0.85f).height(58.dp).shadow(20.dp, CircleShape, spotColor = Color(0x405C73FF)).clip(CircleShape).background(Color(0xFF5C73FF)), contentAlignment = Alignment.Center) {
                     Text("启用Lovekey键盘", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 }
             }
@@ -334,7 +334,7 @@ fun LoginModal(onClose: () -> Unit) {
         Column(modifier = Modifier.fillMaxWidth(0.85f).clip(RoundedCornerShape(28.dp)).background(Color.White).padding(32.dp).clickable(enabled = false) {}, horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) { Text("×", fontSize = 24.sp, modifier = Modifier.clickable { onClose() }) }
             Text("登录LOVEKEY\n添加聊天人设到键盘", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color(0xFF1A1A1A), textAlign = TextAlign.Start, modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp))
-            Box(modifier = Modifier.fillMaxWidth().height(52.dp).clip(CircleShape).background(Color(0xFF5C73FF)).shadow(16.dp, spotColor = Color(0x4D5C73FF)), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxWidth().height(52.dp).shadow(16.dp, CircleShape, spotColor = Color(0x4D5C73FF)).clip(CircleShape).background(Color(0xFF5C73FF)), contentAlignment = Alignment.Center) {
                 Text("📱 手机号登录", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {

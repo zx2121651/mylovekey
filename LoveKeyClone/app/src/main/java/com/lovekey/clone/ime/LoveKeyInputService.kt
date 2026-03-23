@@ -29,6 +29,7 @@ class LoveKeyInputService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
+        PinyinEngineAdapter.init(this)
         composeLifecycle.onCreate()
     }
 
@@ -88,8 +89,8 @@ class LoveKeyInputService : InputMethodService() {
         // Start a new debounce job to fetch the text
         debounceJob = debounceScope.launch {
             delay(300) // 300ms debounce
-            val ic = currentInputConnection ?: return@launch
             // Fetch text before cursor, limit to a reasonable amount (e.g., 500 chars)
+            val ic = currentInputConnection ?: return@launch
             val textBeforeCursor = ic.getTextBeforeCursor(500, 0)?.toString() ?: ""
             // Only update context if we are in normal keyboard mode to avoid thrashing
             if (keyboardState.activePanel == ActivePanel.KEYBOARD) {
@@ -114,6 +115,7 @@ class LoveKeyInputService : InputMethodService() {
             // Letters go into composing text if in Pinyin mode
             if (text.matches(Regex("[a-zA-Z]+"))) {
                 val newComposing = keyboardState.composingText + text
+                PinyinEngineAdapter.clearComposing()
                 val cands = ChineseUtils.getCandidates(newComposing)
                 keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
                 return
@@ -127,6 +129,7 @@ class LoveKeyInputService : InputMethodService() {
     private fun handleDelete() {
         if (keyboardState.composingText.isNotEmpty()) {
             val newComposing = keyboardState.composingText.dropLast(1)
+            PinyinEngineAdapter.clearComposing()
             val cands = if (newComposing.isNotEmpty()) ChineseUtils.getCandidates(newComposing) else emptyList()
             keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
             return
@@ -175,13 +178,13 @@ class LoveKeyInputService : InputMethodService() {
     }
 
     private fun triggerAiAction(action: String) {
+        val ic = currentInputConnection ?: return
         // Intercept based on free usage
         if (keyboardState.freeUsagesLeft <= 0) {
             keyboardState = keyboardState.copy(showPaywall = true)
             return
         }
 
-        val ic = currentInputConnection ?: return
 
         // Use either the composing text or the existing context text tracked via onUpdateSelection
         val currentContext = if (keyboardState.composingText.isNotEmpty()) {

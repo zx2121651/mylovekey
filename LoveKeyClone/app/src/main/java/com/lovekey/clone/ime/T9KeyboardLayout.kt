@@ -21,7 +21,8 @@ fun T9KeyboardLayout(
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
     onEnter: () -> Unit,
-    onSwitchMode: (KeyboardMode) -> Unit
+    onSwitchMode: (KeyboardMode) -> Unit,
+    onClearComposing: () -> Unit
 ) {
     val t9Keys = listOf(
         Pair("1", ""), Pair("2", "ABC"), Pair("3", "DEF"),
@@ -68,7 +69,7 @@ fun T9KeyboardLayout(
         // Right Action Column
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             T9ActionKey(text = "⌫", theme = theme, onClick = onDelete, modifier = Modifier.weight(1f))
-            T9ActionKey(text = "清空", theme = theme, onClick = { /* TODO clear composing */ }, modifier = Modifier.weight(1f))
+            T9ActionKey(text = "清空", theme = theme, onClick = onClearComposing, modifier = Modifier.weight(1f))
 
             // Enter Key with accent
             Box(

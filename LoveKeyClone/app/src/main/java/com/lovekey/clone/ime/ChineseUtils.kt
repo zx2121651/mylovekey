@@ -9,16 +9,13 @@ object ChineseUtils {
     /**
      * Get candidate words for a given pinyin string using the integrated Rime Engine.
      */
-    fun getCandidates(pinyin: String): List<String> {
+    fun getCandidates(pinyin: String, mode: KeyboardMode = KeyboardMode.QWERTY_PINYIN): List<String> {
         if (pinyin.isEmpty()) return emptyList()
 
         // Delegate candidate generation to the C++ Rime Engine via our adapter
-        val candidates = PinyinEngineAdapter.getCandidates(pinyin)
+        val candidates = PinyinEngineAdapter.getCandidates(pinyin, mode)
 
         // Fallback or debug fallback if no real candidates are generated yet
-        if (candidates.isEmpty()) {
-            return listOf(pinyin + "1", pinyin + "2", "我", "你", "的", "了")
-        }
 
         return candidates
     }

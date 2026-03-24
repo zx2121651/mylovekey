@@ -13,6 +13,7 @@ object PinyinEngineAdapter {
     private const val TAG = "PinyinEngineAdapter"
     private var isInitialized = false
     private lateinit var rimeEngine: Rime
+    private var currentMode: KeyboardMode = KeyboardMode.QWERTY_PINYIN
 
     /**
      * Initializes the C++ Rime Engine.
@@ -70,9 +71,25 @@ object PinyinEngineAdapter {
         copyFileOrDir("rime")
     }
 
-    fun getCandidates(pinyin: String): List<String> {
+    fun setKeyboardMode(mode: KeyboardMode) {
+        if (!isInitialized || currentMode == mode) return
+        currentMode = mode
+
+        try {
+            if (mode == KeyboardMode.T9_PINYIN) {
+                Rime.selectSchema("t9_pinyin")
+            } else {
+                Rime.selectSchema("pinyin")
+            }
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to switch Rime schema to $mode", e)
+        }
+    }
+
+    fun getCandidates(pinyin: String, mode: KeyboardMode): List<String> {
         if (!isInitialized) return emptyList()
         if (pinyin.isEmpty()) return emptyList()
+        setKeyboardMode(mode)
 
         try {
             // Rime workflow:

@@ -38,6 +38,7 @@ fun RealKeyboardUI(
     onEnter: () -> Unit,
     onAiAction: (String) -> Unit,
     onSwitchMode: (KeyboardMode) -> Unit,
+    onClearComposing: () -> Unit = {},
     onToggleShift: () -> Unit,
     onToggleTraditional: () -> Unit,
     onCandidateSelect: (String) -> Unit
@@ -154,7 +155,8 @@ fun RealKeyboardUI(
                                 onKeyPress = onKeyPress,
                                 onDelete = onDelete,
                                 onEnter = onEnter,
-                                onSwitchMode = onSwitchMode
+                                onSwitchMode = onSwitchMode,
+                                onClearComposing = onClearComposing
                             )
                         } else {
                             QWERTYKeyboardLayout(

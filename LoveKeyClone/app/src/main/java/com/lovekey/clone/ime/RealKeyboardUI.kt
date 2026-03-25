@@ -39,6 +39,7 @@ fun RealKeyboardUI(
     state: KeyboardState,
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
+    onClear: () -> Unit = {},
     onEnter: () -> Unit,
     onAiAction: (String) -> Unit,
     onSwitchMode: (KeyboardMode) -> Unit,
@@ -167,6 +168,7 @@ fun RealKeyboardUI(
                                 theme = theme,
                                 onKeyPress = onKeyPress,
                                 onDelete = onDelete,
+                                onClear = onClear,
                                 onEnter = onEnter,
                                 onSwitchMode = onSwitchMode
                             )

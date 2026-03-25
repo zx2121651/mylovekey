@@ -56,6 +56,7 @@ class LoveKeyInputService : InputMethodService() {
                         state = keyboardState,
                         onKeyPress = { handleKeyPress(it) },
                         onDelete = { handleDelete() },
+                        onClear = { handleClear() },
                         onEnter = { handleEnter() },
                         onAiAction = { triggerAiAction(it) },
                         onSwitchMode = { newMode -> keyboardState = keyboardState.copy(mode = newMode) },
@@ -175,6 +176,17 @@ class LoveKeyInputService : InputMethodService() {
             ic.deleteSurroundingText(1, 0)
         } else {
             ic.commitText("", 1)
+        }
+    }
+
+    private fun handleClear() {
+        if (keyboardState.composingText.isNotEmpty()) {
+            PinyinEngineAdapter.clearComposing()
+            keyboardState = keyboardState.copy(
+                composingText = "", candidates = emptyList(),
+                t9PinyinCombinations = emptyList(),
+                isSyllableSelectorExpanded = false
+            )
         }
     }
 

@@ -1,6 +1,10 @@
 package com.lovekey.clone.ime
 
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,7 +44,9 @@ fun RealKeyboardUI(
     onSwitchMode: (KeyboardMode) -> Unit,
     onToggleShift: () -> Unit,
     onToggleTraditional: () -> Unit,
-    onCandidateSelect: (String) -> Unit
+    onCandidateSelect: (String) -> Unit,
+    onT9SyllableSelect: (String) -> Unit = {},
+    onToggleT9SyllableSelector: () -> Unit = {}
 ) {
     val theme = state.currentTheme
 
@@ -77,6 +83,14 @@ fun RealKeyboardUI(
                                 )
                             }
                         }
+                    }
+                    if (state.mode == KeyboardMode.T9_PINYIN && state.t9PinyinCombinations.size > 1) {
+                        Icon(
+                            imageVector = if (state.isSyllableSelectorExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Toggle Syllables",
+                            tint = theme.accentColor,
+                            modifier = Modifier.padding(horizontal = 4.dp).clickable { onToggleT9SyllableSelector() }
+                        )
                     }
                 } else {
                     // If no composing text, consume space so button stays on the right

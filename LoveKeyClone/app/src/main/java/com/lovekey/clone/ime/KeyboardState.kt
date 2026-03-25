@@ -28,6 +28,10 @@ data class KeyboardState(
     val isShifted: Boolean = false,
     val composingText: String = "",
     val candidates: List<String> = emptyList(),
+    // T9 Syllable Selector
+    val t9PinyinCombinations: List<String> = emptyList(),
+    val isSyllableSelectorExpanded: Boolean = false,
+    val selectedT9Syllable: String? = null,
     // AI Mock Data State
     val freeUsagesLeft: Int = 3,
     val showPaywall: Boolean = false,

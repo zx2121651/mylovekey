@@ -45,11 +45,9 @@ class LoveKeyInputService : InputMethodService() {
     override fun onCreateInputView(): View {
         composeLifecycle.onStart()
         composeView = ComposeView(this).apply {
-            // The ViewTree bindings must be set directly on the composeView
             this.setViewTreeLifecycleOwner(composeLifecycle)
             this.setViewTreeViewModelStoreOwner(composeLifecycle)
             this.setViewTreeSavedStateRegistryOwner(composeLifecycle)
-            // Use DisposeOnDetachedFromWindow to prevent immediate destruction when hidden
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
 
             setContent {
@@ -63,7 +61,9 @@ class LoveKeyInputService : InputMethodService() {
                         onSwitchMode = { newMode -> keyboardState = keyboardState.copy(mode = newMode) },
                         onToggleShift = { keyboardState = keyboardState.copy(isShifted = !keyboardState.isShifted) },
                         onToggleTraditional = { keyboardState = keyboardState.copy(isTraditional = !keyboardState.isTraditional) },
-                        onCandidateSelect = { handleCandidateSelect(it) }
+                        onCandidateSelect = { handleCandidateSelect(it) },
+                        onT9SyllableSelect = { handleT9SyllableSelect(it) },
+                        onToggleT9SyllableSelector = { keyboardState = keyboardState.copy(isSyllableSelectorExpanded = !keyboardState.isSyllableSelectorExpanded) }
                     )
                 }
             }
@@ -74,36 +74,28 @@ class LoveKeyInputService : InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         composeLifecycle.onResume()
-        // Reset composing state
         keyboardState = keyboardState.copy(
             composingText = "",
             candidates = emptyList(),
-            activePanel = ActivePanel.KEYBOARD, // Reset to standard keyboard
+            t9PinyinCombinations = emptyList(),
+            selectedT9Syllable = null,
+            isSyllableSelectorExpanded = false,
+            activePanel = ActivePanel.KEYBOARD,
             showPaywall = false,
             contextText = ""
         )
     }
 
     override fun onUpdateSelection(
-        oldSelStart: Int,
-        oldSelEnd: Int,
-        newSelStart: Int,
-        newSelEnd: Int,
-        candidatesStart: Int,
-        candidatesEnd: Int
+        oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int,
+        candidatesStart: Int, candidatesEnd: Int
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
-
-        // Cancel previous job
         debounceJob?.cancel()
-
-        // Start a new debounce job to fetch the text
         debounceJob = debounceScope.launch {
-            delay(300) // 300ms debounce
-            // Fetch text before cursor, limit to a reasonable amount (e.g., 500 chars)
+            delay(300)
             val ic = currentInputConnection ?: return@launch
             val textBeforeCursor = ic.getTextBeforeCursor(500, 0)?.toString() ?: ""
-            // Only update context if we are in normal keyboard mode to avoid thrashing
             if (keyboardState.activePanel == ActivePanel.KEYBOARD) {
                 keyboardState = keyboardState.copy(contextText = textBeforeCursor)
             }
@@ -118,26 +110,62 @@ class LoveKeyInputService : InputMethodService() {
 
     private fun handleKeyPress(text: String) {
         if (keyboardState.mode == KeyboardMode.QWERTY_PINYIN || keyboardState.mode == KeyboardMode.T9_PINYIN) {
-            // Letters go into composing text if in Pinyin mode
-            if (text.matches(Regex("[a-zA-Z]+"))) {
+            val isT9Number = keyboardState.mode == KeyboardMode.T9_PINYIN && text.matches(Regex("[2-9]"))
+            if (text.matches(Regex("[a-zA-Z]+")) || isT9Number) {
                 val newComposing = keyboardState.composingText + text
-                PinyinEngineAdapter.clearComposing()
-                val cands = ChineseUtils.getCandidates(newComposing)
-                keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
+
+                if (isT9Number) {
+                    val combinations = ChineseUtils.getT9SyllableCombinations(newComposing)
+                    val currentSyllable = combinations.firstOrNull() ?: ""
+                    val cands = if (currentSyllable.isNotEmpty()) ChineseUtils.getCandidates(currentSyllable) else emptyList()
+                    keyboardState = keyboardState.copy(
+                        composingText = newComposing,
+                        candidates = cands,
+                        t9PinyinCombinations = combinations,
+                        selectedT9Syllable = null,
+                        isSyllableSelectorExpanded = combinations.size > 1
+                    )
+                } else {
+                    PinyinEngineAdapter.clearComposing()
+                    val cands = ChineseUtils.getCandidates(newComposing)
+                    keyboardState = keyboardState.copy(
+                        composingText = newComposing,
+                        candidates = cands,
+                        t9PinyinCombinations = emptyList(),
+                        isSyllableSelectorExpanded = false
+                    )
+                }
                 return
             }
         }
-
-        // Non-letter or not in Pinyin mode: commit directly
         commitDirectly(text)
     }
 
     private fun handleDelete() {
         if (keyboardState.composingText.isNotEmpty()) {
             val newComposing = keyboardState.composingText.dropLast(1)
-            PinyinEngineAdapter.clearComposing()
-            val cands = if (newComposing.isNotEmpty()) ChineseUtils.getCandidates(newComposing) else emptyList()
-            keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
+
+            if (keyboardState.mode == KeyboardMode.T9_PINYIN && newComposing.matches(Regex("[2-9]+"))) {
+                val combinations = ChineseUtils.getT9SyllableCombinations(newComposing)
+                val currentSyllable = combinations.firstOrNull() ?: ""
+                val cands = if (currentSyllable.isNotEmpty()) ChineseUtils.getCandidates(currentSyllable) else emptyList()
+                keyboardState = keyboardState.copy(
+                    composingText = newComposing,
+                    candidates = cands,
+                    t9PinyinCombinations = combinations,
+                    selectedT9Syllable = null,
+                    isSyllableSelectorExpanded = combinations.size > 1
+                )
+            } else {
+                PinyinEngineAdapter.clearComposing()
+                val cands = if (newComposing.isNotEmpty()) ChineseUtils.getCandidates(newComposing) else emptyList()
+                keyboardState = keyboardState.copy(
+                    composingText = newComposing,
+                    candidates = cands,
+                    t9PinyinCombinations = emptyList(),
+                    isSyllableSelectorExpanded = false
+                )
+            }
             return
         }
 
@@ -150,29 +178,40 @@ class LoveKeyInputService : InputMethodService() {
         }
     }
 
+    private fun handleT9SyllableSelect(syllable: String) {
+        val cands = ChineseUtils.getCandidates(syllable)
+        keyboardState = keyboardState.copy(
+            selectedT9Syllable = syllable,
+            candidates = cands,
+            isSyllableSelectorExpanded = false // Collapse after selection
+        )
+    }
+
     private fun handleCandidateSelect(word: String) {
         val output = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(word) else word
         commitDirectly(output)
-        // Reset composing state after selection
-        keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
+        keyboardState = keyboardState.copy(
+            composingText = "", candidates = emptyList(),
+            t9PinyinCombinations = emptyList(), isSyllableSelectorExpanded = false
+        )
     }
 
     private fun commitDirectly(text: String) {
         currentInputConnection?.commitText(text, 1)
-        // If we typed punctuation while composing, we commit the raw letters first then the punctuation.
         if (keyboardState.composingText.isNotEmpty()) {
             currentInputConnection?.commitText(keyboardState.composingText + text, 1)
-            keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
+            keyboardState = keyboardState.copy(
+                composingText = "", candidates = emptyList(),
+                t9PinyinCombinations = emptyList(), isSyllableSelectorExpanded = false
+            )
         }
     }
 
     private fun handleEnter() {
         if (keyboardState.composingText.isNotEmpty()) {
-            // Commit raw English text if user hits enter while composing
             commitDirectly("")
             return
         }
-
         val ic = currentInputConnection ?: return
         val info = currentInputEditorInfo
         val actionId = info?.imeOptions?.and(EditorInfo.IME_MASK_ACTION) ?: EditorInfo.IME_ACTION_DONE
@@ -184,22 +223,16 @@ class LoveKeyInputService : InputMethodService() {
     }
 
     private fun triggerAiAction(action: String) {
-        val ic = currentInputConnection ?: return
-        // Intercept based on free usage
         if (keyboardState.freeUsagesLeft <= 0) {
             keyboardState = keyboardState.copy(showPaywall = true)
             return
         }
-
-
-        // Use either the composing text or the existing context text tracked via onUpdateSelection
         val currentContext = if (keyboardState.composingText.isNotEmpty()) {
             keyboardState.composingText
         } else {
             keyboardState.contextText
         }
 
-        // Mock AI Data
         val mockData = listOf(
             AiReplyCategory("高情商", "🍬", listOf("在呼吸，在心跳，在想你呀~", "本来在发呆，看到你的消息心跳就漏了一拍", "在想怎么回复才能让你心动💓")),
             AiReplyCategory("幽默", "😆", listOf("在思考宇宙的终极奥秘...顺便想你", "在进行光合作用", "用意念给你回复中...")),
@@ -207,63 +240,28 @@ class LoveKeyInputService : InputMethodService() {
         )
 
         when (action) {
-            "帮你回" -> {
-                keyboardState = keyboardState.copy(
-                    activePanel = ActivePanel.BANG_NI_HUI,
-                    contextText = currentContext
-                )
-            }
+            "帮你回" -> keyboardState = keyboardState.copy(activePanel = ActivePanel.BANG_NI_HUI, contextText = currentContext)
             "超会说", "换个说法" -> {
-                keyboardState = keyboardState.copy(
-                    activePanel = ActivePanel.CHAO_HUI_SHUO,
-                    contextText = currentContext,
-                    aiLoading = true, // Start loading
-                    aiMockResults = emptyList() // Clear previous
-                )
-                // Simulate network request
+                keyboardState = keyboardState.copy(activePanel = ActivePanel.CHAO_HUI_SHUO, contextText = currentContext, aiLoading = true, aiMockResults = emptyList())
                 composeView.postDelayed({
-                    keyboardState = keyboardState.copy(
-                        aiLoading = false,
-                        aiMockResults = mockData,
-                        freeUsagesLeft = keyboardState.freeUsagesLeft - 1 // Consume a usage
-                    )
+                    keyboardState = keyboardState.copy(aiLoading = false, aiMockResults = mockData, freeUsagesLeft = keyboardState.freeUsagesLeft - 1)
                 }, 1000)
             }
             "Refresh" -> {
                 keyboardState = keyboardState.copy(aiLoading = true)
                 composeView.postDelayed({
-                    keyboardState = keyboardState.copy(
-                        aiLoading = false,
-                        aiMockResults = mockData.shuffled() // Mock a refresh
-                    )
+                    keyboardState = keyboardState.copy(aiLoading = false, aiMockResults = mockData.shuffled())
                 }, 600)
             }
-            "Themes" -> {
-                keyboardState = keyboardState.copy(
-                    activePanel = ActivePanel.THEME_SELECTION
-                )
-            }
-            "CloseAi" -> {
-                keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
-            }
-            "PaywallClose" -> {
-                keyboardState = keyboardState.copy(showPaywall = false)
-            }
-            "Purchase" -> {
-                // Mock purchase success -> infinite uses
-                keyboardState = keyboardState.copy(
-                    showPaywall = false,
-                    freeUsagesLeft = 9999
-                )
-            }
+            "Themes" -> keyboardState = keyboardState.copy(activePanel = ActivePanel.THEME_SELECTION)
+            "CloseAi" -> keyboardState = keyboardState.copy(activePanel = ActivePanel.KEYBOARD)
+            "PaywallClose" -> keyboardState = keyboardState.copy(showPaywall = false)
+            "Purchase" -> keyboardState = keyboardState.copy(showPaywall = false, freeUsagesLeft = 9999)
             else -> {
                 if (action.startsWith("SelectTheme:")) {
                     val themeId = action.substringAfter("SelectTheme:")
                     val selectedTheme = ThemePresets.allThemes.find { it.id == themeId } ?: ThemePresets.DefaultBlue
-                    keyboardState = keyboardState.copy(
-                        currentTheme = selectedTheme,
-                        activePanel = ActivePanel.KEYBOARD
-                    )
+                    keyboardState = keyboardState.copy(currentTheme = selectedTheme, activePanel = ActivePanel.KEYBOARD)
                 } else {
                     val finalReply = if (keyboardState.isTraditional) ChineseUtils.convertToTraditional(action) else action
                     commitDirectly(finalReply)

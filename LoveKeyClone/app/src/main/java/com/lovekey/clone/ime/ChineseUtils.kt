@@ -23,6 +23,25 @@ object ChineseUtils {
         return candidates
     }
 
+    /**
+     * Mock method to get T9 syllable combinations from a number string
+     */
+    fun getT9SyllableCombinations(numberSequence: String): List<String> {
+        if (numberSequence.isEmpty()) return emptyList()
+        // Very basic mock for demonstration (e.g., 426)
+        return when (numberSequence) {
+            "4" -> listOf("g", "h", "i")
+            "42" -> listOf("ha", "ga", "ia")
+            "426" -> listOf("hao", "gan", "han", "gao", "iao")
+            "96" -> listOf("wo", "yo", "zo")
+            "64" -> listOf("ni", "mi")
+            else -> {
+                // Fallback mock
+                listOf(numberSequence + "a", numberSequence + "o", numberSequence + "e")
+            }
+        }
+    }
+
     // Simple mock for conversion until opencc is fully integrated
     fun convertToTraditional(word: String): String {
         return word.map { char ->

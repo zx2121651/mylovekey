@@ -49,6 +49,10 @@ class LoveKeyInputService : InputMethodService() {
                         onEnter = { handleEnter() },
                         onAiAction = { triggerAiAction(it) },
                         onSwitchMode = { newMode -> keyboardState = keyboardState.copy(mode = newMode) },
+                        onClearComposing = {
+                            PinyinEngineAdapter.clearComposing()
+                            keyboardState = keyboardState.copy(composingText = "", candidates = emptyList())
+                        },
                         onToggleShift = { keyboardState = keyboardState.copy(isShifted = !keyboardState.isShifted) },
                         onToggleTraditional = { keyboardState = keyboardState.copy(isTraditional = !keyboardState.isTraditional) },
                         onCandidateSelect = { handleCandidateSelect(it) }
@@ -110,27 +114,32 @@ class LoveKeyInputService : InputMethodService() {
         composeLifecycle.onDestroy()
     }
 
+
     private fun handleKeyPress(text: String) {
         if (keyboardState.mode == KeyboardMode.QWERTY_PINYIN || keyboardState.mode == KeyboardMode.T9_PINYIN) {
+            val isQwertyLetter = keyboardState.mode == KeyboardMode.QWERTY_PINYIN && text.matches(Regex("[a-zA-Z]+"))
+            val isT9Number = keyboardState.mode == KeyboardMode.T9_PINYIN && text.matches(Regex("[2-9]"))
+
             // Letters go into composing text if in Pinyin mode
-            if (text.matches(Regex("[a-zA-Z]+"))) {
+            if (isQwertyLetter || isT9Number) {
                 val newComposing = keyboardState.composingText + text
                 PinyinEngineAdapter.clearComposing()
-                val cands = ChineseUtils.getCandidates(newComposing)
+                val cands = ChineseUtils.getCandidates(newComposing, keyboardState.mode)
                 keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
                 return
             }
         }
 
-        // Non-letter or not in Pinyin mode: commit directly
+        // Non-letter/non-T9-number or not in Pinyin mode: commit directly
         commitDirectly(text)
     }
+
 
     private fun handleDelete() {
         if (keyboardState.composingText.isNotEmpty()) {
             val newComposing = keyboardState.composingText.dropLast(1)
             PinyinEngineAdapter.clearComposing()
-            val cands = if (newComposing.isNotEmpty()) ChineseUtils.getCandidates(newComposing) else emptyList()
+            val cands = if (newComposing.isNotEmpty()) ChineseUtils.getCandidates(newComposing, keyboardState.mode) else emptyList()
             keyboardState = keyboardState.copy(composingText = newComposing, candidates = cands)
             return
         }
@@ -178,7 +187,6 @@ class LoveKeyInputService : InputMethodService() {
     }
 
     private fun triggerAiAction(action: String) {
-        val ic = currentInputConnection ?: return
         // Intercept based on free usage
         if (keyboardState.freeUsagesLeft <= 0) {
             keyboardState = keyboardState.copy(showPaywall = true)

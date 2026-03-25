@@ -9,6 +9,10 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.lovekey.clone.ui.theme.LoveKeyCloneTheme
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.LifecycleOwner
+import androidx.savedstate.SavedStateRegistryOwner
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -33,12 +37,20 @@ class LoveKeyInputService : InputMethodService() {
         composeLifecycle.onCreate()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        composeLifecycle.onDestroy()
+    }
+
     override fun onCreateInputView(): View {
+        composeLifecycle.onStart()
         composeView = ComposeView(this).apply {
-            setViewTreeLifecycleOwner(composeLifecycle)
-            setViewTreeViewModelStoreOwner(composeLifecycle)
-            setViewTreeSavedStateRegistryOwner(composeLifecycle)
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            // The ViewTree bindings must be set directly on the composeView
+            this.setViewTreeLifecycleOwner(composeLifecycle)
+            this.setViewTreeViewModelStoreOwner(composeLifecycle)
+            this.setViewTreeSavedStateRegistryOwner(composeLifecycle)
+            // Use DisposeOnDetachedFromWindow to prevent immediate destruction when hidden
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
 
             setContent {
                 LoveKeyCloneTheme {
@@ -60,7 +72,6 @@ class LoveKeyInputService : InputMethodService() {
                 }
             }
         }
-        composeLifecycle.onStart()
         return composeView
     }
 
@@ -106,12 +117,7 @@ class LoveKeyInputService : InputMethodService() {
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
         composeLifecycle.onPause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
         composeLifecycle.onStop()
-        composeLifecycle.onDestroy()
     }
 
 

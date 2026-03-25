@@ -110,10 +110,17 @@ class LoveKeyInputService : InputMethodService() {
     }
 
     private fun handleKeyPress(text: String) {
+        var actualText = text
+        // Handle special T9 "@#" input when there is no composing text
+        if (keyboardState.mode == KeyboardMode.T9_PINYIN && text == "1") {
+             // if there's no composing text, 1 could trigger punctuation panel, but for now we fallback to standard handling
+             // or just ignore if it's strictly a pinyin composer trigger
+        }
+
         if (keyboardState.mode == KeyboardMode.QWERTY_PINYIN || keyboardState.mode == KeyboardMode.T9_PINYIN) {
-            val isT9Number = keyboardState.mode == KeyboardMode.T9_PINYIN && text.matches(Regex("[2-9]"))
-            if (text.matches(Regex("[a-zA-Z]+")) || isT9Number) {
-                val newComposing = keyboardState.composingText + text
+            val isT9Number = keyboardState.mode == KeyboardMode.T9_PINYIN && actualText.matches(Regex("[2-9]"))
+            if (actualText.matches(Regex("[a-zA-Z]+")) || isT9Number) {
+                val newComposing = keyboardState.composingText + actualText
 
                 if (isT9Number) {
                     val combinations = ChineseUtils.getT9SyllableCombinations(newComposing)
@@ -139,7 +146,7 @@ class LoveKeyInputService : InputMethodService() {
                 return
             }
         }
-        commitDirectly(text)
+        commitDirectly(actualText)
     }
 
     private fun handleDelete() {

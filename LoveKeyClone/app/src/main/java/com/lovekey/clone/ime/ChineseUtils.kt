@@ -24,22 +24,13 @@ object ChineseUtils {
     }
 
     /**
-     * Mock method to get T9 syllable combinations from a number string
+     * Convert a T9 number sequence to valid pinyin syllable combinations
+     * using the integrated T9 Trie Engine.
      */
     fun getT9SyllableCombinations(numberSequence: String): List<String> {
         if (numberSequence.isEmpty()) return emptyList()
-        // Very basic mock for demonstration (e.g., 426)
-        return when (numberSequence) {
-            "4" -> listOf("g", "h", "i")
-            "42" -> listOf("ha", "ga", "ia")
-            "426" -> listOf("hao", "gan", "han", "gao", "iao")
-            "96" -> listOf("wo", "yo", "zo")
-            "64" -> listOf("ni", "mi")
-            else -> {
-                // Fallback mock
-                listOf(numberSequence + "a", numberSequence + "o", numberSequence + "e")
-            }
-        }
+        // Fetch from the fast Trie engine instead of mocking
+        return T9Engine.getCombinations(numberSequence)
     }
 
     // Simple mock for conversion until opencc is fully integrated

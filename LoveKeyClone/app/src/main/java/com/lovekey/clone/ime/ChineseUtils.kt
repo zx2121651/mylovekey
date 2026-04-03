@@ -12,12 +12,17 @@ object ChineseUtils {
     fun getCandidates(pinyin: String): List<String> {
         if (pinyin.isEmpty()) return emptyList()
 
+        // Clean up formatting spaces/apostrophes introduced by the T9 Engine segmentation
+        // e.g. "ni hao" -> "nihao" or "ni'hao" (Rime handles plain concatenated syllables best in most setups,
+        // but apostrophes are used for explicit disambiguation like xi'an)
+        val rimeInput = pinyin.replace(" ", "")
+
         // Delegate candidate generation to the C++ Rime Engine via our adapter
-        val candidates = PinyinEngineAdapter.getCandidates(pinyin)
+        val candidates = PinyinEngineAdapter.getCandidates(rimeInput)
 
         // Fallback or debug fallback if no real candidates are generated yet
         if (candidates.isEmpty()) {
-            return listOf(pinyin + "1", pinyin + "2", "我", "你", "的", "了")
+            return listOf(rimeInput + "1", rimeInput + "2", "我", "你", "的", "了")
         }
 
         return candidates
@@ -25,12 +30,25 @@ object ChineseUtils {
 
     /**
      * Convert a T9 number sequence to valid pinyin syllable combinations
-     * using the integrated T9 Trie Engine.
+     * using the highly localized T9 Trie Engine.
      */
     fun getT9SyllableCombinations(numberSequence: String): List<String> {
         if (numberSequence.isEmpty()) return emptyList()
-        // Fetch from the fast Trie engine instead of mocking
-        return T9Engine.getCombinations(numberSequence)
+
+        // Use the advanced segmentation logic for long sequences,
+        // fallback/include single syllable prefixes for short ones
+        val segmented = T9Engine.segmentT9Sequence(numberSequence)
+        val singlePrefixes = T9Engine.getSingleCombinations(numberSequence)
+
+        // Combine them, prioritizing the full segmentation over single long prefixes if they differ
+        val combined = mutableListOf<String>()
+        combined.addAll(segmented)
+        for (prefix in singlePrefixes) {
+            if (!combined.contains(prefix)) {
+                combined.add(prefix)
+            }
+        }
+        return combined.take(15) // Limit to top 15 results
     }
 
     // Simple mock for conversion until opencc is fully integrated

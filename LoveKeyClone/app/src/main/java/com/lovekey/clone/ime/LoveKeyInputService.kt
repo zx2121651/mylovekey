@@ -118,11 +118,11 @@ class LoveKeyInputService : InputMethodService() {
         }
 
         if (keyboardState.mode == KeyboardMode.QWERTY_PINYIN || keyboardState.mode == KeyboardMode.T9_PINYIN) {
-            val isT9Number = keyboardState.mode == KeyboardMode.T9_PINYIN && actualText.matches(Regex("[2-9]"))
-            if (actualText.matches(Regex("[a-zA-Z]+")) || isT9Number) {
+            val isT9Sequence = keyboardState.mode == KeyboardMode.T9_PINYIN && actualText.matches(Regex("[1-9]"))
+            if (actualText.matches(Regex("[a-zA-Z]+")) || isT9Sequence) {
                 val newComposing = keyboardState.composingText + actualText
 
-                if (isT9Number) {
+                if (isT9Sequence) {
                     val combinations = ChineseUtils.getT9SyllableCombinations(newComposing)
                     val currentSyllable = combinations.firstOrNull() ?: ""
                     val cands = if (currentSyllable.isNotEmpty()) ChineseUtils.getCandidates(currentSyllable) else emptyList()
@@ -153,7 +153,7 @@ class LoveKeyInputService : InputMethodService() {
         if (keyboardState.composingText.isNotEmpty()) {
             val newComposing = keyboardState.composingText.dropLast(1)
 
-            if (keyboardState.mode == KeyboardMode.T9_PINYIN && newComposing.matches(Regex("[2-9]+"))) {
+            if (keyboardState.mode == KeyboardMode.T9_PINYIN && newComposing.matches(Regex("[1-9]+"))) {
                 val combinations = ChineseUtils.getT9SyllableCombinations(newComposing)
                 val currentSyllable = combinations.firstOrNull() ?: ""
                 val cands = if (currentSyllable.isNotEmpty()) ChineseUtils.getCandidates(currentSyllable) else emptyList()

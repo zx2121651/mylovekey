@@ -7,15 +7,12 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,13 +23,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.Crossfade
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 
 @Composable
 fun RealKeyboardUI(
@@ -40,6 +40,7 @@ fun RealKeyboardUI(
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
     onClear: () -> Unit = {},
+    onMoveCursor: (Int) -> Unit = {},
     onEnter: () -> Unit,
     onAiAction: (String) -> Unit,
     onSwitchMode: (KeyboardMode) -> Unit,
@@ -50,160 +51,210 @@ fun RealKeyboardUI(
     onToggleT9SyllableSelector: () -> Unit = {}
 ) {
     val theme = state.currentTheme
+    val haptic = LocalHapticFeedback.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(theme.keyboardBackground)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(bottom = 4.dp)
-    ) {
-        // --- Candidates Strip & Context Actions ---
-        // We show this row if there is composing text OR if there is context text (to show the magic button)
-        if (state.composingText.isNotEmpty() || state.contextText.isNotEmpty()) {
+    // State to hold the currently pressed key for the popup preview
+    var pressedKeyText by remember { mutableStateOf<String?>(null) }
+    var pressedKeyPosition by remember { mutableStateOf<Offset?>(null) }
+
+    Box(modifier = Modifier.fillMaxWidth().height(280.dp).background(theme.keyboardBackground)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // --- Top Toolbar ---
             Row(
-                modifier = Modifier.fillMaxWidth().height(44.dp).background(theme.candidateStripBackground).padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().height(44.dp).background(theme.toolbarBackground).padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (state.composingText.isNotEmpty()) {
-                    Text(state.composingText, color = theme.accentColor, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            items(state.candidates) { cand ->
-                                val displayCand = if (state.isTraditional) ChineseUtils.convertToTraditional(cand) else cand
-                                Text(
-                                    text = displayCand,
-                                    color = theme.candidateTextColor,
-                                    fontSize = 16.sp,
-                                    modifier = Modifier.clickable { onCandidateSelect(cand) }.padding(vertical = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                    if (state.mode == KeyboardMode.T9_PINYIN && state.t9PinyinCombinations.size > 1) {
-                        Icon(
-                            imageVector = if (state.isSyllableSelectorExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Toggle Syllables",
-                            tint = theme.accentColor,
-                            modifier = Modifier.padding(horizontal = 4.dp).clickable { onToggleT9SyllableSelector() }
-                        )
-                    }
-                } else {
-                    // If no composing text, consume space so button stays on the right
-                    Spacer(modifier = Modifier.weight(1f))
+                Text("♥️ LoveKey", color = theme.toolbarIconColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("🤖 超会说", color = theme.toolbarIconColor, modifier = Modifier.clickable { onAiAction("超会说") })
+                    Text("💡 帮你回", color = theme.toolbarIconColor, modifier = Modifier.clickable { onAiAction("帮你回") })
+                    Text("🎨 主题", color = theme.toolbarIconColor, modifier = Modifier.clickable { onAiAction("Themes") })
                 }
+            }
 
-                // --- “✨ 换个说法” 悬浮触发器 ---
-                AnimatedVisibility(
-                    visible = state.composingText.isNotEmpty() || state.contextText.isNotEmpty(),
-                    enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it })
+            // --- Candidates Strip & Context Actions ---
+            AnimatedVisibility(
+                visible = state.isSyllableSelectorExpanded && state.t9PinyinCombinations.size > 1,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut() // using exit placeholder if needed
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
+                        .background(theme.candidateStripBackground.copy(alpha = 0.95f))
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFFFF6E5))
-                            .border(1.dp, Color(0xFFFFD980), RoundedCornerShape(12.dp))
-                            .clickable { onAiAction("换个说法") }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("✨ 换个说法", color = Color(0xFFA66E00), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        items(state.t9PinyinCombinations) { syllable ->
+                            val isSelected = state.selectedT9Syllable == syllable
+                            Text(
+                                text = syllable,
+                                color = if (isSelected) Color(0xFFFFD980) else theme.candidateTextColor,
+                                fontSize = 15.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier
+                                    .clickable {
+                                        try {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        } catch(e: Exception) {}
+                                        onT9SyllableSelect(syllable)
+                                    }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp)
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        // Only show Toolbar and Keyboard if we are in KEYBOARD panel
-        Crossfade(targetState = state.activePanel, label = "PanelTransition") { panel ->
-            when (panel) {
-                ActivePanel.CHAO_HUI_SHUO -> {
-                    ChaoHuiShuoPanel(
-                        state = state,
-                        onClose = { onAiAction("CloseAi") },
-                        onReplySelect = { onAiAction(it) },
-                        onRefreshReply = { onAiAction("Refresh") }
-                    )
-                }
-                ActivePanel.BANG_NI_HUI -> {
-                    BangNiHuiPanel(
-                        state = state,
-                        onClose = { onAiAction("CloseAi") },
-                        onReplySelect = { onAiAction(it) }
-                    )
-                }
-                ActivePanel.KEYBOARD -> {
-                    Column {
-                        // --- 1. AI Toolbar Top ---
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 6.dp)
-                                .height(40.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(theme.toolbarBackground), contentAlignment = Alignment.Center) { Text("⌨", color = theme.accentColor, fontSize = 16.sp) }
-                            Box(modifier = Modifier.height(32.dp).clip(CircleShape).background(theme.accentColor).padding(horizontal = 14.dp).clickable { onAiAction("帮你回") }, contentAlignment = Alignment.Center) { Text("帮你回", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
-                            Box(modifier = Modifier.height(32.dp).clip(CircleShape).background(theme.toolbarBackground).padding(horizontal = 14.dp).clickable { onAiAction("超会说") }, contentAlignment = Alignment.Center) { Text("超会说", color = theme.toolbarIconColor, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
-                            Spacer(modifier = Modifier.weight(1f))
-                            // Remaining free usages badge placeholder
-                            Box(modifier = Modifier.clip(CircleShape).background(Color(0xFFFFEBEE)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                Text("❤️ ${state.freeUsagesLeft}", color = Color(0xFFFF4B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            // We show this row if there is composing text OR if there is context text (to show the magic button)
+            if (state.composingText.isNotEmpty() || state.contextText.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(44.dp).background(theme.candidateStripBackground).padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (state.composingText.isNotEmpty()) {
+                        Text(state.composingText, color = theme.accentColor, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
+
+                        Box(modifier = Modifier.weight(1f)) {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(state.candidates) { cand ->
+                                    val displayCand = if (state.isTraditional) ChineseUtils.convertToTraditional(cand) else cand
+                                    Text(
+                                        text = displayCand,
+                                        color = theme.candidateTextColor,
+                                        fontSize = 16.sp,
+                                        modifier = Modifier.clickable { onCandidateSelect(cand) }.padding(vertical = 8.dp)
+                                    )
+                                }
                             }
-                            Box(modifier = Modifier.size(32.dp).clip(CircleShape).border(1.dp, theme.toolbarIconColor.copy(alpha = 0.2f), CircleShape).clickable { onAiAction("Themes") }, contentAlignment = Alignment.Center) { Text("👕", color = theme.toolbarIconColor, fontSize = 14.sp) }
-                            Box(modifier = Modifier.size(32.dp).clip(CircleShape).border(1.dp, theme.toolbarIconColor.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) { Text("⊞", color = theme.toolbarIconColor, fontSize = 16.sp) }
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // --- 2. Keyboard Panels ---
-                        if (state.mode == KeyboardMode.T9_PINYIN) {
-                            T9KeyboardLayout(
-                                theme = theme,
-                                onKeyPress = onKeyPress,
-                                onDelete = onDelete,
-                                onClear = onClear,
-                                onEnter = onEnter,
-                                onSwitchMode = onSwitchMode
+                        if (state.mode == KeyboardMode.T9_PINYIN && state.t9PinyinCombinations.size > 1) {
+                            Icon(
+                                imageVector = if (state.isSyllableSelectorExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Toggle Syllables",
+                                tint = theme.accentColor,
+                                modifier = Modifier.padding(horizontal = 4.dp).clickable { onToggleT9SyllableSelector() }
                             )
-                        } else {
-                            QWERTYKeyboardLayout(
-                                mode = state.mode,
-                                isShifted = state.isShifted,
-                                theme = theme,
-                                onKeyPress = onKeyPress,
-                                onDelete = onDelete,
-                                onEnter = onEnter,
-                                onSwitchMode = onSwitchMode,
-                                onToggleShift = onToggleShift,
-                                onToggleTraditional = onToggleTraditional,
-                                isTraditional = state.isTraditional
-                            )
+                        }
+                    } else {
+                        // If no composing text, consume space so button stays on the right
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+
+                    // --- “✨ 换个说法” 悬浮触发器 ---
+                    AnimatedVisibility(
+                        visible = state.composingText.isNotEmpty() || state.contextText.isNotEmpty(),
+                        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+                        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it })
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFFFF6E5))
+                                .border(1.dp, Color(0xFFFFD980), RoundedCornerShape(12.dp))
+                                .clickable { onAiAction("换个说法") }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("✨ 换个说法", color = Color(0xFFA66E00), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
-                ActivePanel.THEME_SELECTION -> {
-                    ThemeSelectionPanel(
-                        currentTheme = theme,
-                        onThemeSelect = { onAiAction("SelectTheme:$it") },
-                        onClose = { onAiAction("CloseAi") }
+            }
+
+            // --- Main Content Area ---
+            Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+                Crossfade(targetState = state.activePanel, label = "panel_fade") { panel ->
+                    when (panel) {
+                        ActivePanel.KEYBOARD -> {
+                            Column {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                if (state.mode == KeyboardMode.T9_PINYIN) {
+                                    T9KeyboardLayout(
+                                        theme = theme,
+                                        onKeyPress = onKeyPress,
+                                        onDelete = onDelete,
+                                        onClear = onClear,
+                                        onMoveCursor = onMoveCursor,
+                                        onKeyActionStart = { text, pos ->
+                                            pressedKeyText = text
+                                            pressedKeyPosition = pos
+                                        },
+                                        onKeyActionEnd = { pressedKeyText = null },
+                                        onEnter = onEnter,
+                                        onSwitchMode = onSwitchMode
+                                    )
+                                } else {
+                                    QWERTYKeyboardLayout(
+                                        mode = state.mode,
+                                        isShifted = state.isShifted,
+                                        theme = theme,
+                                        onKeyPress = onKeyPress,
+                                        onDelete = onDelete,
+                                        onClear = onClear,
+                                        onMoveCursor = onMoveCursor,
+                                        onKeyActionStart = { text, pos ->
+                                            pressedKeyText = text
+                                            pressedKeyPosition = pos
+                                        },
+                                        onKeyActionEnd = { pressedKeyText = null },
+                                        onEnter = onEnter,
+                                        onSwitchMode = onSwitchMode,
+                                        onToggleShift = onToggleShift,
+                                        onToggleTraditional = onToggleTraditional,
+                                        isTraditional = state.isTraditional
+                                    )
+                                }
+                            }
+                        }
+                        ActivePanel.CHAO_HUI_SHUO -> ChaoHuiShuoPanel(state, onClose = { onAiAction("ClosePanel") }, onReplySelect = { onAiAction("SelectReply") }, onRefreshReply = { onAiAction("RefreshReply") })
+                        ActivePanel.BANG_NI_HUI -> BangNiHuiPanel(state, onClose = { onAiAction("ClosePanel") }, onReplySelect = { onAiAction("SelectReply") })
+                        ActivePanel.THEME_SELECTION -> ThemeSelectionPanel(state.currentTheme, { onAiAction("Theme_$it") }, { onAiAction("ClosePanel") })
+                    }
+                }
+            }
+        }
+
+        // --- Overlays ---
+        if (state.showPaywall) {
+            VipPaywallOverlay(
+                onPurchase = { onAiAction("Purchase") },
+                onClose = { onAiAction("PaywallClose") }
+            )
+        }
+
+        // --- Key Popup Preview Overlay ---
+        pressedKeyText?.let { text ->
+            pressedKeyPosition?.let { pos ->
+                val density = LocalDensity.current.density
+                Box(
+                    modifier = Modifier
+                        .offset(x = (pos.x / density - 8).dp, y = (pos.y / density - 60).dp) // Offset above the key
+                        .size(56.dp, 68.dp)
+                        .shadow(8.dp, RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = text,
+                        fontSize = 32.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 6.dp)
                     )
                 }
             }
         }
-    }
-
-    // --- Vip Paywall Overlay ---
-    if (state.showPaywall) {
-        VipPaywallOverlay(
-            onClose = { onAiAction("PaywallClose") },
-            onPurchase = { onAiAction("Purchase") }
-        )
     }
 }

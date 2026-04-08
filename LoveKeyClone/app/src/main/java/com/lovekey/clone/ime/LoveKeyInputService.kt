@@ -241,6 +241,15 @@ class LoveKeyInputService : InputMethodService() {
         }
     }
 
+
+    private fun handleMoveCursor(offset: Int) {
+        val ic = currentInputConnection ?: return
+        if (offset > 0) {
+            sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_RIGHT)
+        } else if (offset < 0) {
+            sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_LEFT)
+        }
+    }
     private fun triggerAiAction(action: String) {
         if (keyboardState.freeUsagesLeft <= 0) {
             keyboardState = keyboardState.copy(showPaywall = true)

@@ -2,25 +2,25 @@ package com.lovekey.clone.ime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-
-
-
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun T9KeyboardLayout(
@@ -28,84 +28,172 @@ fun T9KeyboardLayout(
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
     onClear: () -> Unit,
+    onMoveCursor: (Int) -> Unit,
+    onKeyActionStart: (String, Offset) -> Unit,
+    onKeyActionEnd: () -> Unit,
     onEnter: () -> Unit,
     onSwitchMode: (KeyboardMode) -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
+    var isDeleting by remember { mutableStateOf(false) }
+    var isClearing by remember { mutableStateOf(false) }
 
-    // 5-column layout similar to modern Sogou (Left Punctuation + 3x4 Center + Right Actions)
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        // --- 1. Left Punctuation Column (1 column) ---
-        Column(modifier = Modifier.weight(0.9f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            T9ActionKey(text = "，", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("，") }, modifier = Modifier.weight(0.8f))
-            T9ActionKey(text = "。", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("。") }, modifier = Modifier.weight(0.8f))
-            T9ActionKey(text = "？", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("？") }, modifier = Modifier.weight(0.8f))
-            T9ActionKey(text = "！", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("！") }, modifier = Modifier.weight(0.8f))
-            T9ActionKey(text = "符号", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSwitchMode(KeyboardMode.SYMBOLS) }, modifier = Modifier.weight(0.8f))
+    // Column contains 4 rows
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+
+        // Row 1
+        Row(modifier = Modifier.fillMaxWidth().weight(1f).padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Left col: Symbols
+            T9KeyBox(modifier = Modifier.weight(1.5f), mainText = "符", subText = "", theme = theme, isSpecial = true, onClick = { })
+            // Center grid: 1, 2, 3
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "分词", subText = "1", theme = theme, onClick = { onKeyPress("1") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "ABC", subText = "2", theme = theme, onClick = { onKeyPress("2") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "DEF", subText = "3", theme = theme, onClick = { onKeyPress("3") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            // Right col: Delete
+            T9KeyBoxWithRepeat(modifier = Modifier.weight(1.5f), mainText = "⌫", subText = "", theme = theme, isSpecial = true,
+                onPress = { isDeleting = true; onDelete() },
+                onRelease = { isDeleting = false },
+                onRepeat = { onDelete() },
+                coroutineScope = coroutineScope)
         }
 
-        // --- 2. Center T9 Grid (3 columns) ---
-        Column(modifier = Modifier.weight(3.5f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                T9MainKey(mainText = "@#", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("1") }, modifier = Modifier.weight(1f))
-                T9MainKey(mainText = "ABC", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("2") }, modifier = Modifier.weight(1f))
-                T9MainKey(mainText = "DEF", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("3") }, modifier = Modifier.weight(1f))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                T9MainKey(mainText = "GHI", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("4") }, modifier = Modifier.weight(1f))
-                T9MainKey(mainText = "JKL", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("5") }, modifier = Modifier.weight(1f))
-                T9MainKey(mainText = "MNO", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("6") }, modifier = Modifier.weight(1f))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                T9MainKey(mainText = "PQRS", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("7") }, modifier = Modifier.weight(1f))
-                T9MainKey(mainText = "TUV", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("8") }, modifier = Modifier.weight(1f))
-                T9MainKey(mainText = "WXYZ", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress("9") }, modifier = Modifier.weight(1f))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                T9ActionKey(text = "123", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSwitchMode(KeyboardMode.NUMBERS) }, modifier = Modifier.weight(1f))
+        // Row 2
+        Row(modifier = Modifier.fillMaxWidth().weight(1f).padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Left col: English Mode
+            T9KeyBox(modifier = Modifier.weight(1.5f), mainText = "EN", subText = "", theme = theme, isSpecial = true, onClick = { onSwitchMode(KeyboardMode.QWERTY_EN) })
+            // Center grid: 4, 5, 6
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "GHI", subText = "4", theme = theme, onClick = { onKeyPress("4") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "JKL", subText = "5", theme = theme, onClick = { onKeyPress("5") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "MNO", subText = "6", theme = theme, onClick = { onKeyPress("6") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            // Right col: Clear
+            T9KeyBoxWithRepeat(modifier = Modifier.weight(1.5f), mainText = "重输", subText = "", theme = theme, isSpecial = true,
+                onPress = { isClearing = true; onClear() },
+                onRelease = { isClearing = false },
+                onRepeat = { onClear() },
+                coroutineScope = coroutineScope)
+        }
 
-                // Voice / Space Key
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight()
-                        .shadow(1.dp, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
-                        .background(theme.actionKeyBackground).clickable { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onKeyPress(" ") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "空格", color = theme.actionKeyTextColor, fontSize = 16.sp)
-                }
-
-                // EN/CH Switch
-                T9ActionKey(text = "中/英", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSwitchMode(KeyboardMode.QWERTY_EN) }, modifier = Modifier.weight(1f))
+        // Row 3
+        Row(modifier = Modifier.fillMaxWidth().weight(1f).padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Left col: QWERTY Pinyin Mode
+            T9KeyBox(modifier = Modifier.weight(1.5f), mainText = "全拼", subText = "", theme = theme, isSpecial = true, onClick = { onSwitchMode(KeyboardMode.QWERTY_PINYIN) })
+            // Center grid: 7, 8, 9
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "PQRS", subText = "7", theme = theme, onClick = { onKeyPress("7") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "TUV", subText = "8", theme = theme, onClick = { onKeyPress("8") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = "WXYZ", subText = "9", theme = theme, onClick = { onKeyPress("9") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            // Right col: Top half of Enter
+            Box(modifier = Modifier.weight(1.5f).fillMaxHeight()
+                .clip(RoundedCornerShape(8.dp)).background(theme.accentColor)
+                .clickable { onEnter() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("发送", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
 
-        // --- 3. Right Action Column (1 column) ---
-        Column(modifier = Modifier.weight(1.2f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            T9ActionKey(text = "⌫", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onDelete() }, modifier = Modifier.weight(1f))
-            T9ActionKey(text = "重输", theme = theme, onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClear() }, modifier = Modifier.weight(1f))
+        // Row 4
+        Row(modifier = Modifier.fillMaxWidth().weight(1f).padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Left col: Numbers/Symbols Mode
+            T9KeyBox(modifier = Modifier.weight(1.5f), mainText = "?123", subText = "", theme = theme, isSpecial = true, onClick = { onSwitchMode(KeyboardMode.SYMBOLS) })
+            // Center grid: Comma, 0, Period (or Space cursor control)
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = ",", subText = "", theme = theme, onClick = { onKeyPress(",") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
 
-            // Large Enter Key spanning 2 rows
+            var lastDragAmount = 0f
             Box(
-                modifier = Modifier
-                    .weight(2f)
-                    .fillMaxWidth()
-                    .shadow(1.dp, RoundedCornerShape(6.dp))
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFFB0B5C1)) // A classic grayish blue for enter like Sogou
-                    .clickable {
-                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                         onEnter()
+                modifier = Modifier.weight(2f).fillMaxHeight()
+                    .clip(RoundedCornerShape(8.dp)).background(theme.keyBackground)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { onKeyPress("0") })
+                    }
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { lastDragAmount = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                lastDragAmount += dragAmount
+                                val threshold = 30f
+                                if (lastDragAmount > threshold) {
+                                    onMoveCursor(1)
+                                    lastDragAmount = 0f
+                                } else if (lastDragAmount < -threshold) {
+                                    onMoveCursor(-1)
+                                    lastDragAmount = 0f
+                                }
+                            }
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("0", color = theme.keyTextColor, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("空格", color = theme.keyTextColor.copy(alpha = 0.6f), fontSize = 10.sp)
+                }
+            }
+            T9KeyBox(modifier = Modifier.weight(2f), mainText = ".", subText = "", theme = theme, onClick = { onKeyPress(".") }, onActionStart = onKeyActionStart, onActionEnd = onKeyActionEnd)
+            // Right col: Bottom half of Enter (Since compose doesn't support row-span easily, we make this a spacer or another enter, or we handle it visually. We'll make it part of Enter)
+            Box(modifier = Modifier.weight(1.5f).fillMaxHeight()
+                .clip(RoundedCornerShape(8.dp)).background(theme.accentColor)
+                .clickable { onEnter() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("↵", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun T9KeyBox(
+    modifier: Modifier,
+    mainText: String,
+    subText: String,
+    theme: KeyboardTheme,
+    isSpecial: Boolean = false,
+    onClick: () -> Unit,
+    onActionStart: ((String, Offset) -> Unit)? = null,
+    onActionEnd: (() -> Unit)? = null
+) {
+    var keyPosition by remember { mutableStateOf(Offset.Zero) }
+
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isSpecial) theme.actionKeyBackground else theme.keyBackground)
+            .onGloballyPositioned { coordinates ->
+                keyPosition = coordinates.positionInWindow()
+            }
+            .pointerInput(mainText) {
+                detectTapGestures(
+                    onPress = {
+                        if (onActionStart != null) {
+                            onActionStart(mainText, keyPosition)
+                        }
+                        try {
+                            awaitRelease()
+                        } finally {
+                            if (onActionEnd != null) {
+                                onActionEnd()
+                            }
+                            onClick()
+                        }
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(
+                text = mainText,
+                color = theme.keyTextColor,
+                fontSize = if (isSpecial) 16.sp else 18.sp,
+                fontWeight = if (isSpecial) FontWeight.Medium else FontWeight.Bold
+            )
+            if (subText.isNotEmpty()) {
                 Text(
-                    text = "换行",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    text = subText,
+                    color = theme.keyTextColor.copy(alpha = 0.6f),
+                    fontSize = 10.sp
                 )
             }
         }
@@ -113,41 +201,58 @@ fun T9KeyboardLayout(
 }
 
 @Composable
-fun T9ActionKey(text: String, theme: KeyboardTheme, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun T9KeyBoxWithRepeat(
+    modifier: Modifier,
+    mainText: String,
+    subText: String,
+    theme: KeyboardTheme,
+    isSpecial: Boolean = false,
+    onPress: () -> Unit,
+    onRelease: () -> Unit,
+    onRepeat: () -> Unit,
+    coroutineScope: kotlinx.coroutines.CoroutineScope
+) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .shadow(1.dp, RoundedCornerShape(6.dp))
-            .clip(RoundedCornerShape(6.dp))
-            .background(theme.actionKeyBackground)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        if (text == "⌫") {
-            Text(text = "⌫", color = theme.actionKeyTextColor, fontSize = 18.sp)
-        } else {
-            Text(text = text, color = theme.actionKeyTextColor, fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
-fun T9MainKey(mainText: String, theme: KeyboardTheme, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
             .fillMaxHeight()
-            .shadow(1.dp, RoundedCornerShape(6.dp))
-            .clip(RoundedCornerShape(6.dp))
-            .background(theme.keyBackground)
-            .clickable(onClick = onClick),
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isSpecial) theme.actionKeyBackground else theme.keyBackground)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        onPress()
+                        val job = coroutineScope.launch {
+                            delay(400)
+                            while (true) {
+                                onRepeat()
+                                delay(50)
+                            }
+                        }
+                        try {
+                            awaitRelease()
+                        } finally {
+                            job.cancel()
+                            onRelease()
+                        }
+                    }
+                )
+            },
         contentAlignment = Alignment.Center
     ) {
-         Text(
-             text = mainText,
-             color = theme.keyTextColor,
-             fontSize = if (mainText.length > 3) 14.sp else 18.sp,
-             fontWeight = FontWeight.Normal
-         )
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(
+                text = mainText,
+                color = theme.keyTextColor,
+                fontSize = if (isSpecial) 16.sp else 18.sp,
+                fontWeight = if (isSpecial) FontWeight.Medium else FontWeight.Bold
+            )
+            if (subText.isNotEmpty()) {
+                Text(
+                    text = subText,
+                    color = theme.keyTextColor.copy(alpha = 0.6f),
+                    fontSize = 10.sp
+                )
+            }
+        }
     }
 }
